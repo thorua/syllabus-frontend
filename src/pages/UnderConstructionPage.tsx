@@ -10,10 +10,6 @@ import { Button } from '../components/ui/button';
  * pantalla queda lista, y el componente desaparece al cerrar la Fase 6.
  */
 export const PENDING_ROUTES: Record<string, { title: string; phase: number }> = {
-  '/pregrado': { title: 'Pregrado', phase: 3 },
-  '/posgrado': { title: 'Posgrado', phase: 3 },
-  '/subjects': { title: 'Asignaturas', phase: 3 },
-  '/my-subjects': { title: 'Mis Asignaturas', phase: 3 },
   '/syllabus': { title: 'Syllabus', phase: 4 },
   '/settings': { title: 'Configuración', phase: 5 },
   '/export': { title: 'Exportar', phase: 6 },

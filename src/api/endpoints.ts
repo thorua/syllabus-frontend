@@ -5,10 +5,14 @@ import type {
   AuditLog,
   AuditOptions,
   Department,
+  DepartmentInput,
   LoginResponse,
   PaginatedResponse,
   Program,
+  ProgramInput,
   Subject,
+  SubjectFilters,
+  SubjectInput,
   Syllabus,
   SyllabusFilters,
   User,
@@ -57,15 +61,28 @@ export const auditApi = {
 };
 
 export const departmentsApi = {
-  getAll: () => data(api.get<Department[]>('/departments')),
+  getAll: (includeInactive = false) =>
+    data(api.get<Department[]>('/departments', { params: { includeInactive } })),
+  create: (input: DepartmentInput) => data(api.post<Department>('/departments', input)),
+  update: (id: string, input: DepartmentInput) =>
+    data(api.put<Department>(`/departments/${id}`, input)),
+  deactivate: (id: string) => data(api.delete<{ message: string }>(`/departments/${id}`)),
 };
 
 export const programsApi = {
-  getAll: (departmentId?: string) =>
-    data(api.get<Program[]>('/programs', { params: { departmentId } })),
+  getAll: (departmentId?: string, includeInactive = false) =>
+    data(api.get<Program[]>('/programs', { params: { departmentId, includeInactive } })),
+  create: (input: ProgramInput) => data(api.post<Program>('/programs', input)),
+  update: (id: string, input: ProgramInput) => data(api.put<Program>(`/programs/${id}`, input)),
+  deactivate: (id: string) => data(api.delete<{ message: string }>(`/programs/${id}`)),
 };
 
 export const subjectsApi = {
-  getAll: (departmentId?: string, programId?: string) =>
-    data(api.get<Subject[]>('/subjects', { params: { departmentId, programId } })),
+  getAll: (filters: SubjectFilters = {}) =>
+    data(api.get<Subject[]>('/subjects', { params: filters })),
+  create: (input: SubjectInput) => data(api.post<Subject>('/subjects', input)),
+  update: (id: string, input: SubjectInput) => data(api.put<Subject>(`/subjects/${id}`, input)),
+  deactivate: (id: string) => data(api.delete<{ message: string }>(`/subjects/${id}`)),
+  assignProfessor: (id: string, professorId: string | null) =>
+    data(api.put<Subject>(`/subjects/${id}/assign-professor`, { professorId })),
 };

@@ -1,6 +1,8 @@
 // src/lib/programLevel.ts
 
-export const POSGRADO_LEVELS: string[] = ['ESPECIALIZACION', 'MAESTRIA', 'DOCTORADO'];
+import type { ProgramLevel } from '../types';
+
+export const POSGRADO_LEVELS: ProgramLevel[] = ['ESPECIALIZACION', 'MAESTRIA', 'DOCTORADO'];
 
 export const PROGRAM_LEVEL_LABELS: Record<string, string> = {
   PREGRADO: 'Pregrado',
@@ -10,7 +12,7 @@ export const PROGRAM_LEVEL_LABELS: Record<string, string> = {
 };
 
 export function isPosgradoLevel(level?: string | null): boolean {
-  return !!level && POSGRADO_LEVELS.includes(level.toUpperCase());
+  return !!level && (POSGRADO_LEVELS as string[]).includes(level.toUpperCase());
 }
 
 export function getLevelLabel(level?: string | null): string {

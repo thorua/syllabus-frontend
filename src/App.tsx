@@ -9,6 +9,9 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UsersListPage } from './pages/users/UsersListPage';
 import { AuditPage } from './pages/audit/AuditPage';
+import { PregradoPage } from './pages/catalog/PregradoPage';
+import { PosgradoPage } from './pages/catalog/PosgradoPage';
+import { SubjectsPage } from './pages/catalog/SubjectsPage';
 import { PermissionGuard } from './components/guards/PermissionGuard';
 import { PENDING_ROUTES, UnderConstructionPage } from './pages/UnderConstructionPage';
 
@@ -85,6 +88,50 @@ function AppRoutes() {
           <ProtectedRoute>
             <PermissionGuard permission="audit:read">
               <AuditPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pregrado"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="department:read">
+              <PregradoPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/posgrado"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="program:read">
+              <PosgradoPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/subjects"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="subject:read">
+              <SubjectsPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-subjects"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="subject:read">
+              <SubjectsPage />
             </PermissionGuard>
           </ProtectedRoute>
         }
