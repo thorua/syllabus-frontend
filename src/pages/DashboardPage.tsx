@@ -44,11 +44,11 @@ export function DashboardPage() {
   });
   const [page, setPage] = useState(1);
 
-  const { data: statsSyllabus } = useSyllabusList({ limit: 1 });
+  const { data: statsSyllabus, isLoading: loadingSyllabus } = useSyllabusList({ limit: 1 });
   const canReadUsers = can('user:read');
-  const { data: statsUsers } = useUsers({ limit: 1 }, canReadUsers);
-  const { data: statsDepartments } = useDepartments();
-  const { data: statsSubjects } = useSubjects();
+  const { data: statsUsers, isLoading: loadingUsers } = useUsers({ limit: 1 }, canReadUsers);
+  const { data: statsDepartments, isLoading: loadingDepartments } = useDepartments();
+  const { data: statsSubjects, isLoading: loadingSubjects } = useSubjects();
 
   const stats = {
     syllabus: statsSyllabus?.pagination?.total || 0,
@@ -57,8 +57,8 @@ export function DashboardPage() {
     subjects: (Array.isArray(statsSubjects) ? statsSubjects : [])?.length || 0,
   };
 
-  const loading =
-    !statsSyllabus || (canReadUsers && !statsUsers) || !statsDepartments || !statsSubjects;
+  // Solo "..." mientras se consulta; si una consulta falla se muestra 0 en lugar de quedarse cargando.
+  const loading = loadingSyllabus || loadingUsers || loadingDepartments || loadingSubjects;
 
   const queryFilters: SyllabusFilters = {
     page,

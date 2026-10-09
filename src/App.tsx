@@ -10,6 +10,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { UsersListPage } from './pages/users/UsersListPage';
 import { AuditPage } from './pages/audit/AuditPage';
 import { PermissionGuard } from './components/guards/PermissionGuard';
+import { PENDING_ROUTES, UnderConstructionPage } from './pages/UnderConstructionPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -88,6 +89,18 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {Object.keys(PENDING_ROUTES).map((path) => (
+        <Route
+          key={path}
+          path={`${path}/*`}
+          element={
+            <ProtectedRoute>
+              <UnderConstructionPage />
+            </ProtectedRoute>
+          }
+        />
+      ))}
 
       <Route path="/departments" element={<Navigate to="/pregrado" replace />} />
       <Route path="/programs" element={<Navigate to="/posgrado" replace />} />
