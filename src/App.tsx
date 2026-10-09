@@ -7,6 +7,9 @@ import { LoginPage } from './pages/LoginPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { UsersListPage } from './pages/users/UsersListPage';
+import { AuditPage } from './pages/audit/AuditPage';
+import { PermissionGuard } from './components/guards/PermissionGuard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -60,6 +63,28 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="user:read">
+              <UsersListPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/audit"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="audit:read">
+              <AuditPage />
+            </PermissionGuard>
           </ProtectedRoute>
         }
       />

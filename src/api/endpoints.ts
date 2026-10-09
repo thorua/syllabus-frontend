@@ -1,5 +1,9 @@
 import api from './client';
 import type {
+  AffiliationsInput,
+  AuditFilters,
+  AuditLog,
+  AuditOptions,
   Department,
   LoginResponse,
   PaginatedResponse,
@@ -9,6 +13,8 @@ import type {
   SyllabusFilters,
   User,
   UserFilters,
+  UserInput,
+  PermissionOverride,
 } from '../types';
 
 const data = <T>(promise: Promise<{ data: T }>) => promise.then((r) => r.data);
@@ -34,6 +40,20 @@ export const syllabusApi = {
 export const usersApi = {
   getAll: (filters: UserFilters = {}) =>
     data(api.get<PaginatedResponse<User>>('/users', { params: filters })),
+  create: (input: UserInput) => data(api.post<User>('/users', input)),
+  update: (id: string, input: UserInput) => data(api.put<User>(`/users/${id}`, input)),
+  deactivate: (id: string) => data(api.delete<{ message: string }>(`/users/${id}`)),
+  updatePermissions: (id: string, permissionOverrides: PermissionOverride[]) =>
+    data(api.put<User>(`/users/${id}/permissions`, { permissionOverrides })),
+  updateAffiliations: (id: string, input: AffiliationsInput) =>
+    data(api.put<User>(`/users/${id}/affiliations`, input)),
+  permissionCatalog: () => data(api.get<Record<string, string>>('/users/permission-catalog')),
+};
+
+export const auditApi = {
+  getAll: (filters: AuditFilters = {}) =>
+    data(api.get<PaginatedResponse<AuditLog>>('/audit', { params: filters })),
+  options: () => data(api.get<AuditOptions>('/audit/options')),
 };
 
 export const departmentsApi = {

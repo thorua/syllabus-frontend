@@ -36,3 +36,18 @@ export interface UserFilters {
   page?: number;
   limit?: number;
 }
+
+/** Datos básicos y roles (UC3). password: obligatoria al crear; al editar, opcional. */
+export interface UserInput {
+  name: string;
+  email: string;
+  password?: string;
+  roles: Role[];
+  phone?: string;
+  isActive?: boolean;
+}
+
+export interface AffiliationsInput {
+  departmentIds: string[];
+  programIds: string[];
+}

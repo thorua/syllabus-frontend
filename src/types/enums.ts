@@ -83,3 +83,13 @@ export const RoleColors: Record<Role, string> = {
   [Role.ADM_REGISTRO]: 'bg-cyan-100 text-cyan-800',
   [Role.ADMINISTRADOR]: 'bg-red-100 text-red-800',
 };
+
+/** Roles en orden de jerarquía, para selectores y filtros. */
+export const ALL_ROLES: Role[] = [
+  Role.ESTUDIANTE,
+  Role.PROFESOR,
+  Role.COORDINADOR_PROGRAMA,
+  Role.COORDINADOR_DEPARTAMENTO,
+  Role.ADM_REGISTRO,
+  Role.ADMINISTRADOR,
+];
