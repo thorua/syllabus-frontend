@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 210 20% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 20% 15%;
+    --primary: 202 100% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 14% 96%;
+    --secondary-foreground: 210 20% 25%;
+    --muted: 210 14% 96%;
+    --muted-foreground: 210 8% 46%;
+    --accent: 50 88% 59%;
+    --accent-foreground: 210 20% 15%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 16% 88%;
+    --input: 210 16% 88%;
+    --ring: 202 100% 32%;
+    --radius: 0.5rem;
+    --uam-blue: #0069A3;
+    --uam-yellow: #F4D73B;
+    --uam-gray-dark: #575757;
+    --uam-gray-mid: #B2B2B2;
+    --uam-gray-light: #EDEDED;
+  }
+
+  .dark {
+    --background: 202 100% 8%;
+    --foreground: 0 0% 98%;
+    --card: 202 100% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 202 100% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 50 88% 59%;
+    --primary-foreground: 202 100% 10%;
+    --secondary: 202 30% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 202 30% 18%;
+    --muted-foreground: 202 20% 65%;
+    --accent: 202 100% 40%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 202 30% 18%;
+    --input: 202 30% 18%;
+    --ring: 50 88% 59%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  .uam-gradient {
+    background: linear-gradient(135deg, #0069A3 0%, #004e7a 50%, #003a5c 100%);
+  }
+
+  .uam-gradient-subtle {
+    background: linear-gradient(135deg, #f0f7fc 0%, #faf8eb 50%, #f8f6f0 100%);
+  }
+
+  .uam-card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+  }
+
+  .uam-header {
+    @apply text-uam-blue font-bold;
+  }
+
+  .uam-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .uam-badge-blue {
+    @apply uam-badge bg-blue-50 text-uam-blue border border-blue-200;
+  }
+
+  .uam-badge-yellow {
+    @apply uam-badge bg-amber-50 text-amber-700 border border-amber-200;
+  }
+
+  .uam-badge-green {
+    @apply uam-badge bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+
+  .uam-badge-red {
+    @apply uam-badge bg-red-50 text-red-700 border border-red-200;
+  }
+}
