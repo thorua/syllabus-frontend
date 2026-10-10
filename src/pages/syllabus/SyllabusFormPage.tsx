@@ -31,6 +31,7 @@ import {
   useUpdateSyllabus,
 } from '../../hooks';
 import { applyTemplate, evaluationIssues } from '../../lib/evaluation';
+import { FORMAT_HINT } from '../../lib/textFormat';
 import { getSubjectCode, getSubjectName } from '../../lib/utils';
 import { SectionType, SectionTypeLabels, SyllabusStatus, SyllabusStatusLabels } from '../../types';
 import type {
@@ -501,6 +502,7 @@ function SyllabusForm({
                         placeholder="Escriba el contenido de esta sección..."
                       />
                     )}
+                    {!section.evaluation && <p className="text-xs text-gray-500">{FORMAT_HINT}</p>}
                   </div>
                 </div>
               ))}

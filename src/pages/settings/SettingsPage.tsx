@@ -224,7 +224,7 @@ function SettingsForm({ initial }: { initial: InstitutionalConfig }) {
                             id={`corte-label-${corte.corte}`}
                             value={corte.label}
                             onChange={(e) => updateCorte(corteIndex, { label: e.target.value })}
-                            placeholder="PRIMER CORTE"
+                            placeholder="I"
                             maxLength={100}
                           />
                         </div>
@@ -333,7 +333,7 @@ function SettingsForm({ initial }: { initial: InstitutionalConfig }) {
                 <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
                   <button
                     type="button"
-                    disabled={template.length >= 6}
+                    disabled={template.length >= 3}
                     onClick={() =>
                       setTemplate((prev) => [
                         ...prev,
