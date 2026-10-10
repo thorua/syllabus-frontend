@@ -19,6 +19,8 @@ export interface Program {
   level: ProgramLevel;
   /** Nulo en posgrado. */
   department?: Department | null;
+  /** Correo de la coordinación; sin él, el syllabus muestra el docente asignado. */
+  coordinationEmail?: string | null;
   isActive: boolean;
   /** Solo en el listado: asignaturas activas. */
   subjectCount?: number;
@@ -58,6 +60,7 @@ export interface ProgramInput {
   code: string;
   level: ProgramLevel;
   departmentId?: string | null;
+  coordinationEmail?: string;
   isActive?: boolean;
 }
 

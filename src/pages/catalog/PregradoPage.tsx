@@ -40,7 +40,12 @@ export function PregradoPage() {
   const [deptFormData, setDeptFormData] = useState({ name: '', code: '' });
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
-  const [programFormData, setProgramFormData] = useState({ name: '', code: '', departmentId: '' });
+  const [programFormData, setProgramFormData] = useState({
+    name: '',
+    code: '',
+    departmentId: '',
+    coordinationEmail: '',
+  });
   const [pending, setPending] = useState<PendingDeactivation | null>(null);
 
   const { data: departments = [] } = useDepartments(showInactive);
@@ -70,7 +75,7 @@ export function PregradoPage() {
 
   const openCreateProgram = () => {
     setEditingProgram(null);
-    setProgramFormData({ name: '', code: '', departmentId: filterDept });
+    setProgramFormData({ name: '', code: '', departmentId: filterDept, coordinationEmail: '' });
     setShowProgramModal(true);
   };
 
@@ -80,6 +85,7 @@ export function PregradoPage() {
       name: prog.name,
       code: prog.code,
       departmentId: prog.department?.id ?? '',
+      coordinationEmail: prog.coordinationEmail ?? '',
     });
     setShowProgramModal(true);
   };
@@ -145,6 +151,7 @@ export function PregradoPage() {
           code: prog.code,
           level: 'PREGRADO',
           departmentId: prog.department?.id,
+          coordinationEmail: prog.coordinationEmail ?? '',
           isActive: true,
         },
       });
@@ -180,6 +187,16 @@ export function PregradoPage() {
           {getLevelLabel(prog.level)}
         </span>
       ),
+    },
+    {
+      key: 'coordinationEmail',
+      header: 'Coordinación',
+      render: (prog: Program) =>
+        prog.coordinationEmail ? (
+          <span className="text-gray-600">{prog.coordinationEmail}</span>
+        ) : (
+          <span className="text-gray-400">Sin coordinación (muestra el docente)</span>
+        ),
     },
     {
       key: 'subjectCount',
@@ -424,6 +441,23 @@ export function PregradoPage() {
                 </option>
               ))}
             </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="prog-coord">Correo de coordinación</Label>
+            <Input
+              id="prog-coord"
+              type="email"
+              value={programFormData.coordinationEmail}
+              onChange={(e) =>
+                setProgramFormData({ ...programFormData, coordinationEmail: e.target.value })
+              }
+              placeholder="coordinacion.programa@autonoma.edu.co"
+              maxLength={150}
+            />
+            <p className="text-xs text-gray-500">
+              Si se indica, el syllabus exportado muestra este correo y deja vacío el docente. Sin
+              coordinación, se muestran el docente asignado a la asignatura y su correo.
+            </p>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setShowProgramModal(false)}>

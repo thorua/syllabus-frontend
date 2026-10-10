@@ -25,11 +25,12 @@ export function PosgradoPage() {
   const [showInactive, setShowInactive] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Program | null>(null);
-  const [formData, setFormData] = useState<{ name: string; code: string; level: ProgramLevel }>({
-    name: '',
-    code: '',
-    level: 'MAESTRIA',
-  });
+  const [formData, setFormData] = useState<{
+    name: string;
+    code: string;
+    level: ProgramLevel;
+    coordinationEmail: string;
+  }>({ name: '', code: '', level: 'MAESTRIA', coordinationEmail: '' });
   const [toDeactivate, setToDeactivate] = useState<Program | null>(null);
 
   const { data: allPrograms = [], isLoading: loading } = usePrograms(undefined, showInactive);
@@ -40,13 +41,18 @@ export function PosgradoPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setFormData({ name: '', code: '', level: 'MAESTRIA' });
+    setFormData({ name: '', code: '', level: 'MAESTRIA', coordinationEmail: '' });
     setShowModal(true);
   };
 
   const openEdit = (prog: Program) => {
     setEditing(prog);
-    setFormData({ name: prog.name, code: prog.code, level: prog.level });
+    setFormData({
+      name: prog.name,
+      code: prog.code,
+      level: prog.level,
+      coordinationEmail: prog.coordinationEmail ?? '',
+    });
     setShowModal(true);
   };
 
@@ -77,7 +83,13 @@ export function PosgradoPage() {
     try {
       await saveProgram.mutateAsync({
         id: prog.id,
-        input: { name: prog.name, code: prog.code, level: prog.level, isActive: true },
+        input: {
+          name: prog.name,
+          code: prog.code,
+          level: prog.level,
+          coordinationEmail: prog.coordinationEmail ?? '',
+          isActive: true,
+        },
       });
       toast.success('Programa activado');
     } catch (error) {
@@ -106,6 +118,16 @@ export function PosgradoPage() {
           {getLevelLabel(prog.level)}
         </span>
       ),
+    },
+    {
+      key: 'coordinationEmail',
+      header: 'Coordinación',
+      render: (prog: Program) =>
+        prog.coordinationEmail ? (
+          <span className="text-gray-600">{prog.coordinationEmail}</span>
+        ) : (
+          <span className="text-gray-400">Sin coordinación (muestra el docente)</span>
+        ),
     },
     {
       key: 'subjectCount',
@@ -219,6 +241,21 @@ export function PosgradoPage() {
                 </option>
               ))}
             </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pos-coord">Correo de coordinación</Label>
+            <Input
+              id="pos-coord"
+              type="email"
+              value={formData.coordinationEmail}
+              onChange={(e) => setFormData({ ...formData, coordinationEmail: e.target.value })}
+              placeholder="Vacío si el programa no tiene coordinación"
+              maxLength={150}
+            />
+            <p className="text-xs text-gray-500">
+              Si se indica, el syllabus exportado muestra este correo y deja vacío el docente. Sin
+              coordinación, se muestran el docente asignado a la asignatura y su correo.
+            </p>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
