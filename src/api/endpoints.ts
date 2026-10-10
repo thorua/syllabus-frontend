@@ -27,6 +27,29 @@ import type {
 
 const data = <T>(promise: Promise<{ data: T }>) => promise.then((r) => r.data);
 
+export interface DownloadedFile {
+  blob: Blob;
+  filename: string;
+}
+
+/** Descarga un archivo y toma su nombre del encabezado Content-Disposition. */
+const file = (
+  promise: Promise<{ data: Blob; headers: Record<string, unknown> }>,
+  fallback: string,
+) =>
+  promise.then((r): DownloadedFile => {
+    const disposition = String(r.headers['content-disposition'] ?? '');
+    const match = /filename="?([^";]+)"?/.exec(disposition);
+    return { blob: r.data, filename: match?.[1] ?? fallback };
+  });
+
+export interface BatchExportInput {
+  syllabusIds?: string[];
+  departmentId?: string;
+  programId?: string;
+  academicPeriod?: string;
+}
+
 export const authApi = {
   login: (email: string, password: string) =>
     data(api.post<LoginResponse>('/auth/login', { email, password })),
@@ -52,6 +75,18 @@ export const syllabusApi = {
   getVersions: (id: string) => data(api.get<SyllabusVersion[]>(`/syllabus/${id}/versions`)),
   getVersion: (id: string, versionId: string) =>
     data(api.get<SyllabusVersion>(`/syllabus/${id}/versions/${versionId}`)),
+};
+
+export const exportApi = {
+  syllabus: (id: string) =>
+    file(api.get<Blob>(`/export/syllabus/${id}`, { responseType: 'blob' }), 'syllabus.pdf'),
+  batch: (input: BatchExportInput) =>
+    file(api.post<Blob>('/export/batch', input, { responseType: 'blob' }), 'syllabus.zip'),
+  template: () =>
+    file(
+      api.get<Blob>('/export/template', { responseType: 'blob' }),
+      'plantilla-syllabus-en-blanco.pdf',
+    ),
 };
 
 export const settingsApi = {

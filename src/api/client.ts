@@ -19,10 +19,19 @@ api.interceptors.request.use((config) => {
 // Las rutas /auth/* manejan su propio 401 (p. ej. credenciales inválidas).
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401 && !error.config?.url?.startsWith('/auth/')) {
       localStorage.removeItem(TOKEN_KEY);
       window.location.href = '/login';
+    }
+    // Las descargas piden un Blob: si el backend responde un error JSON, se lee para mostrar su mensaje.
+    const body = error.response?.data;
+    if (body instanceof Blob && body.type.includes('json')) {
+      try {
+        error.response.data = JSON.parse(await body.text());
+      } catch {
+        // Se conserva el Blob: getErrorMessage usará el mensaje por defecto.
+      }
     }
     return Promise.reject(error);
   },

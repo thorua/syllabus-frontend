@@ -17,8 +17,8 @@ import { SyllabusDetailPage } from './pages/syllabus/SyllabusDetailPage';
 import { SyllabusFormPage } from './pages/syllabus/SyllabusFormPage';
 import { SyllabusVersionsPage } from './pages/syllabus/SyllabusVersionsPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { ExportPage } from './pages/export/ExportPage';
 import { PermissionGuard } from './components/guards/PermissionGuard';
-import { PENDING_ROUTES, UnderConstructionPage } from './pages/UnderConstructionPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -177,17 +177,16 @@ function AppRoutes() {
         }
       />
 
-      {Object.keys(PENDING_ROUTES).map((path) => (
-        <Route
-          key={path}
-          path={`${path}/*`}
-          element={
-            <ProtectedRoute>
-              <UnderConstructionPage />
-            </ProtectedRoute>
-          }
-        />
-      ))}
+      <Route
+        path="/export"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="syllabus:export">
+              <ExportPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/departments" element={<Navigate to="/pregrado" replace />} />
       <Route path="/programs" element={<Navigate to="/posgrado" replace />} />

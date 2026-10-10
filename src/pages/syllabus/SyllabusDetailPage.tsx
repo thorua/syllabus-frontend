@@ -5,7 +5,15 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { SyllabusStatusBadge } from '../../components/ui/status-badge';
 import { SectionContent } from '../../components/syllabus/EvaluationTableReader';
-import { useAuth, useSettings, useSyllabus, useSyllabusVersions } from '../../hooks';
+import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../api/client';
+import {
+  useAuth,
+  useExportSyllabus,
+  useSettings,
+  useSyllabus,
+  useSyllabusVersions,
+} from '../../hooks';
 import { syllabusAccess } from '../../lib/syllabusAccess';
 import {
   formatDate,
@@ -21,6 +29,7 @@ import {
 } from '../../lib/utils';
 import {
   ArrowLeft,
+  Download,
   Edit,
   History,
   BookOpen,
@@ -40,6 +49,16 @@ export function SyllabusDetailPage() {
   const { data: config } = useSettings();
   const access = syllabus ? syllabusAccess(syllabus, can) : null;
   const { data: versions = [] } = useSyllabusVersions(id, !!access?.versions);
+  const exportMutation = useExportSyllabus();
+
+  const handleExport = async () => {
+    try {
+      await exportMutation.mutateAsync(id);
+      toast.success('Syllabus exportado correctamente');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Error al exportar syllabus'));
+    }
+  };
 
   if (loading) {
     return (
@@ -88,6 +107,17 @@ export function SyllabusDetailPage() {
           </div>
           <div className="flex items-center gap-2">
             <SyllabusStatusBadge status={syllabus.status} />
+            {can('syllabus:export') && (
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={exportMutation.isPending}
+                className="border-uam-gray-mid/30 hover:bg-uam-blue hover:text-white hover:border-uam-blue"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {exportMutation.isPending ? 'Exportando...' : 'Exportar PDF'}
+              </Button>
+            )}
             {access.edit && (
               <Link to={`/syllabus/${id}/edit`}>
                 <Button className="bg-uam-blue hover:bg-uam-blue-dark shadow-uam">
