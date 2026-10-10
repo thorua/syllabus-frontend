@@ -1,4 +1,14 @@
-export { useSyllabusList } from './useSyllabus';
+export {
+  useSyllabusList,
+  useSyllabusPeriods,
+  useSyllabus,
+  useSyllabusVersions,
+  useSyllabusVersion,
+  useCreateSyllabus,
+  useUpdateSyllabus,
+  useDeactivateSyllabus,
+} from './useSyllabus';
+export { useSettings } from './useSettings';
 export { useUsers, usePermissionCatalog, useSaveUser, useDeactivateUser } from './useUsers';
 export {
   useDepartments,

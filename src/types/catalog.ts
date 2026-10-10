@@ -82,4 +82,6 @@ export interface SubjectFilters {
   professorId?: string;
   search?: string;
   includeInactive?: boolean;
+  /** Solo asignaturas del alcance de gestión (p. ej. para crear su syllabus). */
+  manageable?: boolean;
 }

@@ -13,8 +13,12 @@ import type {
   Subject,
   SubjectFilters,
   SubjectInput,
+  InstitutionalConfig,
   Syllabus,
+  SyllabusCreateInput,
   SyllabusFilters,
+  SyllabusUpdateInput,
+  SyllabusVersion,
   User,
   UserFilters,
   UserInput,
@@ -39,6 +43,19 @@ export const authApi = {
 export const syllabusApi = {
   getAll: (filters: SyllabusFilters = {}) =>
     data(api.get<PaginatedResponse<Syllabus>>('/syllabus', { params: filters })),
+  getById: (id: string) => data(api.get<Syllabus>(`/syllabus/${id}`)),
+  getPeriods: () => data(api.get<string[]>('/syllabus/periods')),
+  create: (input: SyllabusCreateInput) => data(api.post<Syllabus>('/syllabus', input)),
+  update: (id: string, input: SyllabusUpdateInput) =>
+    data(api.put<Syllabus>(`/syllabus/${id}`, input)),
+  deactivate: (id: string) => data(api.delete<{ message: string }>(`/syllabus/${id}`)),
+  getVersions: (id: string) => data(api.get<SyllabusVersion[]>(`/syllabus/${id}/versions`)),
+  getVersion: (id: string, versionId: string) =>
+    data(api.get<SyllabusVersion>(`/syllabus/${id}/versions/${versionId}`)),
+};
+
+export const settingsApi = {
+  get: () => data(api.get<InstitutionalConfig>('/settings')),
 };
 
 export const usersApi = {

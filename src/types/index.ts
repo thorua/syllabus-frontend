@@ -3,3 +3,4 @@ export * from './catalog';
 export * from './user';
 export * from './syllabus';
 export * from './audit';
+export * from './settings';

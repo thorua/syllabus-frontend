@@ -12,6 +12,10 @@ import { AuditPage } from './pages/audit/AuditPage';
 import { PregradoPage } from './pages/catalog/PregradoPage';
 import { PosgradoPage } from './pages/catalog/PosgradoPage';
 import { SubjectsPage } from './pages/catalog/SubjectsPage';
+import { SyllabusListPage } from './pages/syllabus/SyllabusListPage';
+import { SyllabusDetailPage } from './pages/syllabus/SyllabusDetailPage';
+import { SyllabusFormPage } from './pages/syllabus/SyllabusFormPage';
+import { SyllabusVersionsPage } from './pages/syllabus/SyllabusVersionsPage';
 import { PermissionGuard } from './components/guards/PermissionGuard';
 import { PENDING_ROUTES, UnderConstructionPage } from './pages/UnderConstructionPage';
 
@@ -33,6 +37,18 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (loading) return null;
   return isAuthenticated ? <Navigate to="/" replace /> : <>{children}</>;
 }
+
+const SYLLABUS_ROUTES = [
+  { path: '/syllabus', permission: 'syllabus:read', page: <SyllabusListPage /> },
+  { path: '/syllabus/new', permission: 'syllabus:create', page: <SyllabusFormPage /> },
+  { path: '/syllabus/:id', permission: 'syllabus:read', page: <SyllabusDetailPage /> },
+  { path: '/syllabus/:id/edit', permission: 'syllabus:update', page: <SyllabusFormPage /> },
+  {
+    path: '/syllabus/:id/versions',
+    permission: 'syllabus:versions',
+    page: <SyllabusVersionsPage />,
+  },
+];
 
 function AppRoutes() {
   return (
@@ -70,6 +86,18 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {SYLLABUS_ROUTES.map(({ path, permission, page }) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            <ProtectedRoute>
+              <PermissionGuard permission={permission}>{page}</PermissionGuard>
+            </ProtectedRoute>
+          }
+        />
+      ))}
 
       <Route
         path="/users"

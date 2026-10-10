@@ -18,6 +18,7 @@ import {
   useSubjects,
 } from '../hooks';
 import { getRoleLabel, getDescriptiveTitle, getDepartmentName, getProgramName } from '../lib/utils';
+import { syllabusAccess } from '../lib/syllabusAccess';
 import {
   FileText,
   Users,
@@ -136,7 +137,7 @@ export function DashboardPage() {
           <p className="font-semibold text-gray-900 truncate">{s.title}</p>
           <p className="text-sm text-gray-500 mt-0.5 truncate">{getDescriptiveTitle(s)}</p>
           <p className="text-xs text-gray-400 mt-0.5">
-            {getDepartmentName(s)} / {getProgramName(s)}
+            {s.subject.department ? getDepartmentName(s) : 'Posgrado'} / {getProgramName(s)}
           </p>
         </div>
       ),
@@ -163,7 +164,7 @@ export function DashboardPage() {
       onClick: (s) => {
         navigate(`/syllabus/${s.id}/edit`);
       },
-      if: () => can('syllabus:update'),
+      if: (s) => syllabusAccess(s, can).edit,
     },
   ];
 
@@ -227,7 +228,7 @@ export function DashboardPage() {
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Buscar..."
                   value={filters.search}
@@ -248,7 +249,6 @@ export function DashboardPage() {
               <Select
                 value={filters.programId}
                 onChange={(e) => handleFilterChange('programId', e.target.value)}
-                disabled={!filters.departmentId}
                 options={[
                   { value: '', label: 'Todos los programas' },
                   ...programs.map((prog) => ({ value: prog.id, label: prog.name })),
