@@ -56,6 +56,16 @@ export const syllabusApi = {
 
 export const settingsApi = {
   get: () => data(api.get<InstitutionalConfig>('/settings')),
+  update: (input: InstitutionalConfig) => data(api.put<InstitutionalConfig>('/settings', input)),
+  uploadLogo: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return data(
+      api.post<InstitutionalConfig>('/settings/logo', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }),
+    );
+  },
 };
 
 export const usersApi = {

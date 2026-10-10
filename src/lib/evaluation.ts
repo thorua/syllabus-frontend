@@ -41,3 +41,19 @@ export function evaluationToLines(cortes: EvaluationCorte[]): string[] {
     ...c.tipos.map((t) => `   ${t.tipo || '(sin nombre)'}: ${t.porcentaje} %`),
   ]);
 }
+
+/** Problemas de la plantilla institucional (UC20): cortes completos y que todo sume 100 %. */
+export function templateIssues(template: EvaluationTemplate): string[] {
+  const issues: string[] = [];
+  if (template.length === 0) issues.push('La plantilla debe tener al menos un corte.');
+  template.forEach((corte, i) => {
+    const label = corte.label.trim() || `Corte ${i + 1}`;
+    if (!corte.label.trim()) issues.push(`${label}: el rótulo es obligatorio.`);
+    if (corte.porcentaje < 1 || corte.porcentaje > 100)
+      issues.push(`${label}: el porcentaje debe estar entre 1 y 100.`);
+    issues.push(...evaluationIssues([{ ...corte, label }]));
+  });
+  const total = template.reduce((sum, c) => sum + (Number(c.porcentaje) || 0), 0);
+  if (total !== 100) issues.push(`Los cortes suman ${total} % y deben sumar 100 %.`);
+  return issues;
+}

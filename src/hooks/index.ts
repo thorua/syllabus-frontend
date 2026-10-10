@@ -8,7 +8,7 @@ export {
   useUpdateSyllabus,
   useDeactivateSyllabus,
 } from './useSyllabus';
-export { useSettings } from './useSettings';
+export { useSettings, useUpdateSettings, useUploadLogo } from './useSettings';
 export { useUsers, usePermissionCatalog, useSaveUser, useDeactivateUser } from './useUsers';
 export {
   useDepartments,

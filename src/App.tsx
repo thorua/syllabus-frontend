@@ -16,6 +16,7 @@ import { SyllabusListPage } from './pages/syllabus/SyllabusListPage';
 import { SyllabusDetailPage } from './pages/syllabus/SyllabusDetailPage';
 import { SyllabusFormPage } from './pages/syllabus/SyllabusFormPage';
 import { SyllabusVersionsPage } from './pages/syllabus/SyllabusVersionsPage';
+import { SettingsPage } from './pages/settings/SettingsPage';
 import { PermissionGuard } from './components/guards/PermissionGuard';
 import { PENDING_ROUTES, UnderConstructionPage } from './pages/UnderConstructionPage';
 
@@ -116,6 +117,17 @@ function AppRoutes() {
           <ProtectedRoute>
             <PermissionGuard permission="audit:read">
               <AuditPage />
+            </PermissionGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <PermissionGuard permission="config:update">
+              <SettingsPage />
             </PermissionGuard>
           </ProtectedRoute>
         }
