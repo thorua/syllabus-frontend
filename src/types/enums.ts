@@ -53,12 +53,6 @@ export const SyllabusStatusLabels: Record<SyllabusStatus, string> = {
   [SyllabusStatus.BORRADOR]: 'Borrador',
 };
 
-export const GenderLabels: Record<Gender, string> = {
-  [Gender.MASCULINO]: 'Masculino',
-  [Gender.FEMENINO]: 'Femenino',
-  [Gender.OTRO]: 'Otro',
-};
-
 export const SectionTypeLabels: Record<SectionType, string> = {
   [SectionType.IDENTIFICATION]: 'Identificación',
   [SectionType.JUSTIFICATION]: 'Justificación',
