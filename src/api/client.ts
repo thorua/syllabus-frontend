@@ -37,12 +37,19 @@ api.interceptors.response.use(
   },
 );
 
-/** Mensaje de error del backend (propiedad "error" del ProblemDetail) o uno por defecto. */
+/**
+ * Mensaje de error del backend (propiedad "error" del ProblemDetail) o uno por defecto. En los
+ * errores de validación agrega el primer motivo, para que se sepa qué corregir.
+ */
 export function getErrorMessage(error: unknown, fallback: string): string {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.error || fallback;
-  }
-  return fallback;
+  if (!axios.isAxiosError(error)) return fallback;
+  const body = error.response?.data;
+  const message: string | undefined = body?.error;
+  const firstDetail = body?.details
+    ? Object.values(body.details as Record<string, string>)[0]
+    : null;
+  if (message && firstDetail) return `${message.replace(/\.$/, '')}: ${firstDetail}`;
+  return message || fallback;
 }
 
 export default api;
