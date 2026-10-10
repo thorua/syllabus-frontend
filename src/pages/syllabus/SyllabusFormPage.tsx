@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { SyllabusHeaderEditor } from '../../components/syllabus/SyllabusHeaderEditor';
 import type { HeaderField } from '../../components/syllabus/SyllabusHeaderEditor';
 import { EvaluationTableEditor } from '../../components/syllabus/EvaluationTableEditor';
+import { IdentificationTable } from '../../components/syllabus/SectionContent';
 import {
   ArrowLeft,
   ChevronDown,
@@ -184,11 +185,15 @@ function SyllabusForm({
     });
 
   const hasEvaluation = sections.some((s) => s.sectionType === SectionType.EVALUATION);
+  const selectedSubject = syllabus?.subject ?? subjects.find((s) => s.id === subjectId);
 
   /** Mismas reglas que el backend para activar: secciones con contenido y evaluación completa. */
   const activationProblem = (): string | null => {
     const empty = sections.find(
-      (s) => s.sectionType !== SectionType.EVALUATION && !s.content.trim(),
+      (s) =>
+        s.sectionType !== SectionType.EVALUATION &&
+        s.sectionType !== SectionType.IDENTIFICATION &&
+        !s.content.trim(),
     );
     if (empty) return `La sección «${empty.title || 'sin título'}» no tiene contenido.`;
     const evaluation = sections.find((s) => s.evaluation)?.evaluation;
@@ -487,7 +492,21 @@ function SyllabusForm({
 
                   <div className="space-y-2">
                     <Label htmlFor={`sec-content-${section.key}`}>Contenido</Label>
-                    {section.evaluation ? (
+                    {section.sectionType === SectionType.IDENTIFICATION ? (
+                      <div className="space-y-2">
+                        {selectedSubject && (
+                          <IdentificationTable
+                            subject={selectedSubject}
+                            academicPeriod={syllabus?.academicPeriod ?? academicPeriod}
+                          />
+                        )}
+                        <p className="text-xs text-gray-500">
+                          {selectedSubject
+                            ? 'Se completa con los datos de la asignatura y de su programa; se corrigen en Asignaturas o en Pregrado/Posgrado.'
+                            : 'Seleccione la asignatura: esta tabla se completa con sus datos.'}
+                        </p>
+                      </div>
+                    ) : section.evaluation ? (
                       <EvaluationTableEditor
                         value={section.evaluation}
                         onChange={(evaluation) => updateSection(index, { evaluation })}
@@ -502,7 +521,9 @@ function SyllabusForm({
                         placeholder="Escriba el contenido de esta sección..."
                       />
                     )}
-                    {!section.evaluation && <p className="text-xs text-gray-500">{FORMAT_HINT}</p>}
+                    {!section.evaluation && section.sectionType !== SectionType.IDENTIFICATION && (
+                      <p className="text-xs text-gray-500">{FORMAT_HINT}</p>
+                    )}
                   </div>
                 </div>
               ))}

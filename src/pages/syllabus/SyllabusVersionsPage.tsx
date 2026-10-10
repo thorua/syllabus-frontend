@@ -4,7 +4,7 @@ import { Layout } from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { SectionContent } from '../../components/syllabus/EvaluationTableReader';
+import { SectionContent } from '../../components/syllabus/SectionContent';
 import { ArrowLeft, Clock, User, FileText, GitCompare } from 'lucide-react';
 import { useSyllabus, useSyllabusVersion, useSyllabusVersions } from '../../hooks';
 import { compareSnapshots } from '../../lib/diff';

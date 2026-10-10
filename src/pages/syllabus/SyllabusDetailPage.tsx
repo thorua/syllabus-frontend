@@ -4,12 +4,13 @@ import { Layout } from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { SyllabusStatusBadge } from '../../components/ui/status-badge';
-import { SectionContent } from '../../components/syllabus/EvaluationTableReader';
+import { SectionContent } from '../../components/syllabus/SectionContent';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../api/client';
 import {
   useAuth,
   useExportSyllabus,
+  usePrintSyllabus,
   useSettings,
   useSyllabus,
   useSyllabusVersions,
@@ -30,6 +31,7 @@ import {
 import {
   ArrowLeft,
   Download,
+  Printer,
   Edit,
   History,
   BookOpen,
@@ -50,6 +52,15 @@ export function SyllabusDetailPage() {
   const access = syllabus ? syllabusAccess(syllabus, can) : null;
   const { data: versions = [] } = useSyllabusVersions(id, !!access?.versions);
   const exportMutation = useExportSyllabus();
+  const printMutation = usePrintSyllabus();
+
+  const handlePrint = async () => {
+    try {
+      await printMutation.mutateAsync(id);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Error al preparar la impresión'));
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -116,6 +127,18 @@ export function SyllabusDetailPage() {
               >
                 <Download className="mr-2 h-4 w-4" />
                 {exportMutation.isPending ? 'Exportando...' : 'Exportar PDF'}
+              </Button>
+            )}
+            {can('syllabus:export') && (
+              <Button
+                variant="outline"
+                onClick={handlePrint}
+                disabled={printMutation.isPending}
+                title="Abre el formato estándar Almera para imprimirlo"
+                className="border-uam-gray-mid/30 hover:bg-uam-blue hover:text-white hover:border-uam-blue"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir
               </Button>
             )}
             {access.edit && (
@@ -195,7 +218,7 @@ export function SyllabusDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <SectionContent section={section} />
+                  <SectionContent section={section} syllabus={syllabus} />
                 </CardContent>
               </Card>
             ))}

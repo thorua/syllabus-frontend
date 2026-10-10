@@ -9,7 +9,12 @@ export {
   useDeactivateSyllabus,
 } from './useSyllabus';
 export { useSettings, useUpdateSettings, useUploadLogo } from './useSettings';
-export { useExportSyllabus, useExportBatch, useExportTemplate } from './useExport';
+export {
+  useExportSyllabus,
+  usePrintSyllabus,
+  useExportBatch,
+  useExportTemplate,
+} from './useExport';
 export { useUsers, usePermissionCatalog, useSaveUser, useDeactivateUser } from './useUsers';
 export {
   useDepartments,

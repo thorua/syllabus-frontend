@@ -1,5 +1,6 @@
 import { SectionType } from '../../types';
-import type { EvaluationCorte, SyllabusSection } from '../../types';
+import type { EvaluationCorte, SyllabusSection, SyllabusSubject } from '../../types';
+import { identificationRows } from '../../lib/identification';
 import { bibliographyBlocks, textBlocks } from '../../lib/textFormat';
 import type { Block } from '../../lib/textFormat';
 import { cn } from '../../lib/utils';
@@ -48,8 +49,48 @@ export function EvaluationTableReader({ cortes }: { cortes: EvaluationCorte[] })
   );
 }
 
-/** Contenido de una sección: la tabla de evaluación o el texto con viñetas, negritas y cursivas. */
-export function SectionContent({ section }: { section: SyllabusSection }) {
+/** Tabla «Identificación» con los datos de la asignatura, igual a la del PDF. */
+export function IdentificationTable({
+  subject,
+  academicPeriod,
+}: {
+  subject: SyllabusSubject;
+  academicPeriod: string;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-sm">
+        <tbody>
+          {identificationRows(subject, academicPeriod).map((row) => (
+            <tr key={row.label} className="border-b">
+              <td className="w-1/2 p-2 font-medium text-gray-900">{row.label}</td>
+              <td className={cn('p-2', row.email ? 'text-uam-blue' : 'text-gray-700')}>
+                {row.value || '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * Contenido de una sección: la tabla de identificación (si se conoce la asignatura), la de
+ * evaluación o el texto con viñetas, negritas y cursivas.
+ */
+export function SectionContent({
+  section,
+  syllabus,
+}: {
+  section: SyllabusSection;
+  syllabus?: { subject: SyllabusSubject; academicPeriod: string };
+}) {
+  if (section.sectionType === SectionType.IDENTIFICATION && syllabus) {
+    return (
+      <IdentificationTable subject={syllabus.subject} academicPeriod={syllabus.academicPeriod} />
+    );
+  }
   if (section.evaluation) {
     return <EvaluationTableReader cortes={section.evaluation} />;
   }
