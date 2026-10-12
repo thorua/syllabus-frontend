@@ -41,6 +41,8 @@ interface SubjectForm {
   hoursDirigido: string;
   hoursIndependiente: string;
   prerequisites: string;
+  /** Espacio del plan sin syllabus propio (curso libre, electiva, énfasis, práctica). */
+  planSpace: boolean;
 }
 
 const emptyForm: SubjectForm = {
@@ -53,6 +55,7 @@ const emptyForm: SubjectForm = {
   hoursDirigido: '',
   hoursIndependiente: '',
   prerequisites: '',
+  planSpace: false,
 };
 
 const toForm = (s: Subject): SubjectForm => ({
@@ -65,6 +68,7 @@ const toForm = (s: Subject): SubjectForm => ({
   hoursDirigido: s.hoursDirigido?.toString() ?? '',
   hoursIndependiente: s.hoursIndependiente?.toString() ?? '',
   prerequisites: s.prerequisites ?? '',
+  planSpace: !s.requiresSyllabus,
 });
 
 const optionalNumber = (value: string) => (value === '' ? null : Number(value));
@@ -80,6 +84,7 @@ const toInput = (f: SubjectForm): SubjectInput => ({
   hoursDirigido: optionalNumber(f.hoursDirigido),
   hoursIndependiente: optionalNumber(f.hoursIndependiente),
   prerequisites: f.prerequisites,
+  requiresSyllabus: !f.planSpace,
 });
 
 /** Programas (y semestre) en cuyos planes de estudio vigentes está la asignatura. */
@@ -129,17 +134,28 @@ export function SubjectsPage() {
   const totalPages = Math.max(1, Math.ceil(allSubjects.length / PAGE_SIZE));
   const subjects = allSubjects.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  // Solo la coordinación de un departamento gestiona sus asignaturas (un profesor afiliado no).
+  const coordinatesDepartments = !!user?.roles.includes(Role.COORDINADOR_DEPARTAMENTO);
   const editableDepartments = useMemo(
     () =>
       fullScope
         ? departments
-        : departments.filter((d) => user?.departments.some((ud) => ud.id === d.id)),
-    [departments, fullScope, user],
+        : coordinatesDepartments
+          ? departments.filter((d) => user?.departments.some((ud) => ud.id === d.id))
+          : [],
+    [departments, fullScope, coordinatesDepartments, user],
   );
+  // La coordinación de un posgrado gestiona las asignaturas de su programa.
   const posgradoPrograms = useMemo(
-    () => (fullScope ? programs.filter((p) => isPosgradoLevel(p.level)) : []),
-    [programs, fullScope],
+    () =>
+      programs.filter(
+        (p) =>
+          isPosgradoLevel(p.level) && (fullScope || user?.programs.some((up) => up.id === p.id)),
+      ),
+    [programs, fullScope, user],
   );
+  const canCreate =
+    can('subject:create') && editableDepartments.length + posgradoPrograms.length > 0;
 
   const resetPage = () => setPage(1);
 
@@ -226,7 +242,18 @@ export function SubjectsPage() {
       header: 'Código',
       render: (s) => <span className="font-mono text-xs">{s.code}</span>,
     },
-    { key: 'name', header: 'Nombre', render: (s) => <span className="font-medium">{s.name}</span> },
+    {
+      key: 'name',
+      header: 'Nombre',
+      render: (s) => (
+        <span className="font-medium">
+          {s.name}
+          {!s.requiresSyllabus && (
+            <span className="ml-2 text-xs font-normal text-gray-400">espacio del plan</span>
+          )}
+        </span>
+      ),
+    },
     {
       key: 'offeredBy',
       header: 'Ofrecida por',
@@ -332,7 +359,7 @@ export function SubjectsPage() {
           readOnly ? 'Asignaturas de sus programas académicos' : 'Gestionar asignaturas académicas'
         }
         action={
-          !readOnly && can('subject:create') ? (
+          !readOnly && canCreate ? (
             <Button onClick={openCreateModal}>
               <Plus className="mr-2 h-4 w-4" />
               Crear Asignatura
@@ -542,6 +569,22 @@ export function SubjectsPage() {
               onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
             />
           </div>
+
+          <label className="flex items-start gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={formData.planSpace}
+              onChange={(e) => setFormData({ ...formData, planSpace: e.target.checked })}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+            />
+            <span>
+              Espacio del plan sin syllabus propio
+              <span className="block text-xs text-gray-500">
+                Curso libre, electiva, énfasis o práctica: aparece en la malla, pero no se le crea
+                syllabus ni cuenta como faltante.
+              </span>
+            </span>
+          </label>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setShowModal(false)}>

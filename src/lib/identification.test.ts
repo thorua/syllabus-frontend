@@ -11,6 +11,7 @@ const enPlan = (name: string, planActive = true) => ({
   plan: 'Plan 2026',
   planActive,
   semester: 1,
+  area: 'BASICA' as const,
 });
 
 const subject = (coordinationEmail?: string): SyllabusSubject => ({
@@ -53,11 +54,11 @@ describe('identificationRows', () => {
     expect(value(rows, 'E-mail docente (s)')).toBe('profesor@autonoma.edu.co');
   });
 
-  it('completa los datos faltantes como el formato institucional', () => {
+  it('marca como por definir los datos que la asignatura aún no tiene', () => {
     const rows = identificationRows(subject(), '2026-01');
     expect(value(rows, 'Departamento (área)')).toBe('No aplica (posgrado)');
-    expect(value(rows, 'Horas de trabajo dirigido/tutoría sincrónica')).toBe('—');
-    expect(value(rows, 'Prerrequisitos')).toBe('Ninguno');
+    expect(value(rows, 'Horas de trabajo dirigido/tutoría sincrónica')).toBe('Por definir');
+    expect(value(rows, 'Prerrequisitos')).toBe('Por definir');
     expect(value(rows, 'Año- Periodo académico')).toBe('2026-01');
   });
 });

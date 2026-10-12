@@ -18,6 +18,7 @@ import {
   Landmark,
   Network,
   PenLine,
+  FileSignature,
 } from 'lucide-react';
 
 interface NavItem {
@@ -38,6 +39,7 @@ const navItems: NavItem[] = [
   { label: 'Posgrado', href: '/posgrado', icon: <Award size={20} />, visible: (can) => can('program:create') },
   { label: 'Planes de estudio', href: '/study-plans', icon: <Network size={20} />, visible: (can) => can('program:read') },
   { label: 'Asignaturas', href: '/subjects', icon: <BookOpen size={20} />, visible: (can) => can('syllabus:create') },
+  { label: 'Pendientes de firma', href: '/firmas', icon: <FileSignature size={20} />, visible: (can) => can('syllabus:sign') },
   { label: 'Mi firma digital', href: '/firma-digital', icon: <PenLine size={20} />, visible: (can) => can('syllabus:sign') },
   { label: 'Exportar', href: '/export', icon: <Download size={20} />, visible: (can) => can('syllabus:export') },
   { label: 'Auditoría', href: '/audit', icon: <FileCheck size={20} />, visible: (can) => can('audit:read') },

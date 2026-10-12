@@ -11,7 +11,7 @@ import { Modal } from '../../components/ui/modal';
 import { ConventionsLegend } from '../../components/syllabus/Conventions';
 import { getErrorMessage } from '../../api/client';
 import { cn } from '../../lib/utils';
-import { CONVENTIONS } from '../../lib/verification';
+import { AREAS, CONVENTIONS } from '../../lib/verification';
 import { getLevelLabel, isPosgradoLevel } from '../../lib/programLevel';
 import {
   useAuth,
@@ -24,7 +24,7 @@ import {
   useSubjects,
   useSyllabusPeriods,
 } from '../../hooks';
-import type { CurriculumState, CurriculumSubject } from '../../types';
+import type { CurriculumState, CurriculumSubject, FormationArea } from '../../types';
 
 const selectClass = 'flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm';
 
@@ -35,10 +35,11 @@ function currentPeriod(): string {
 }
 
 /**
- * Malla curricular de cada plan de estudios por semestre, con el estado del syllabus de cada
- * asignatura en el período: verificado (✔ verde), pendiente de firma, en borrador o sin syllabus
- * (✘ rojo). Muestra quién ofrece cada asignatura, p. ej. las de Matemáticas en los planes de
- * ingeniería. La Administración arma los planes (agrega, mueve o quita asignaturas).
+ * Malla curricular de cada plan de estudios por semestre, ordenada y marcada por área de formación
+ * como en los planes publicados, con el estado del syllabus de cada asignatura en el período:
+ * verificado (✔ verde), pendiente de firma, en borrador o sin syllabus (✘ rojo). Los espacios del
+ * plan (cursos libres, electivas) no tienen syllabus propio y no cuentan como faltantes. La
+ * Administración arma los planes (agrega, mueve o quita asignaturas).
  */
 export function StudyPlansPage() {
   const { can, user } = useAuth();
@@ -92,7 +93,14 @@ export function StudyPlansPage() {
     );
     return c;
   }, [curriculum]);
-  const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0);
+  // Los espacios del plan no tienen syllabus propio: no cuentan en el avance.
+  const total = Object.entries(counts)
+    .filter(([state]) => state !== 'ESPACIO')
+    .reduce((a, [, n]) => a + (n ?? 0), 0);
+  const areas = useMemo(
+    () => [...new Set(curriculum?.semesters.flatMap((s) => s.subjects.map((x) => x.area)) ?? [])],
+    [curriculum],
+  );
   const plan = plans.find((p) => p.id === planId);
   const program = programs.find((p) => p.id === programId);
 
@@ -210,11 +218,23 @@ export function StudyPlansPage() {
           )}
 
           <ConventionsLegend />
+          {areas.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
+              <span className="font-semibold text-gray-700">Áreas de formación:</span>
+              {areas.map((area) => (
+                <span key={area} className="inline-flex items-center gap-1">
+                  <span className={cn('h-3 w-1.5 rounded-sm', AREAS[area].className)} />
+                  {AREAS[area].label}
+                </span>
+              ))}
+            </div>
+          )}
 
           {curriculum && total > 0 && (
             <p className="text-sm text-gray-600">
               {counts.VERIFICADO ?? 0} de {total} asignaturas con syllabus verificado en {period}
-              {counts.SIN_SYLLABUS ? ` · ${counts.SIN_SYLLABUS} sin syllabus` : ''}.
+              {counts.SIN_SYLLABUS ? ` · ${counts.SIN_SYLLABUS} sin syllabus` : ''}
+              {counts.ESPACIO ? ` · ${counts.ESPACIO} espacios del plan sin syllabus propio` : ''}.
             </p>
           )}
 
@@ -223,19 +243,19 @@ export function StudyPlansPage() {
             <p className="text-sm text-gray-500">El plan no tiene asignaturas.</p>
           )}
           {curriculum && curriculum.semesters.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               {curriculum.semesters.map((semestre) => (
                 <section
                   key={semestre.number}
-                  className="w-56 shrink-0 rounded-lg bg-uam-gray-light/50 p-2"
+                  className="w-40 shrink-0 rounded-lg bg-uam-gray-light/50 p-1.5"
                 >
-                  <h3 className="mb-2 text-center text-sm font-semibold text-uam-blue">
+                  <h3 className="mb-1.5 text-center text-xs font-semibold text-uam-blue">
                     Semestre {semestre.number}
-                    <span className="block text-xs font-normal text-gray-500">
+                    <span className="block font-normal text-gray-500">
                       {semestre.credits} créditos
                     </span>
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {semestre.subjects.map((x) => (
                       <SubjectCard
                         key={x.subjectId}
@@ -280,19 +300,26 @@ function SubjectCard({
   const body = (
     <>
       <div className="flex items-start justify-between gap-1">
-        <span className="font-mono text-xs">{subject.code}</span>
-        <span aria-label={c.label} title={c.label} className="text-sm font-bold">
+        <span className="font-mono text-[10px]">{subject.code}</span>
+        <span aria-label={c.label} className="text-xs font-bold">
           {c.mark}
         </span>
       </div>
-      <p className="text-sm font-medium leading-tight">{subject.name}</p>
-      <p className={cn('mt-1 text-xs', external ? 'font-medium' : 'opacity-75')}>
-        {subject.offeredBy} · {subject.credits} cr.
+      <p className="text-xs font-medium leading-tight">{subject.name}</p>
+      <p className={cn('mt-0.5 text-[10px]', external ? 'font-semibold' : 'opacity-75')}>
+        {subject.offeredByCode} · {subject.credits} cr.
       </p>
     </>
   );
   return (
-    <div className={cn('group relative rounded-md border p-2', c.className)}>
+    <div
+      title={`${subject.name} · ${subject.offeredBy} · ${AREAS[subject.area].label} · ${c.label}`}
+      className={cn(
+        'group relative overflow-hidden rounded-md border py-1 pl-2.5 pr-1.5',
+        c.className,
+      )}
+    >
+      <span className={cn('absolute inset-y-0 left-0 w-1', AREAS[subject.area].className)} />
       {subject.syllabusId && subject.state !== 'BORRADOR' ? (
         <Link to={`/syllabus/${subject.syllabusId}`} className="block hover:underline">
           {body}
@@ -326,6 +353,7 @@ function AddSubjectModal({
   const { data: subjects = [] } = useSubjects();
   const [subjectId, setSubjectId] = useState('');
   const [semester, setSemester] = useState('1');
+  const [area, setArea] = useState<FormationArea>('PROFESIONAL');
   const place = usePlaceSubject();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -335,6 +363,7 @@ function AddSubjectModal({
         planId,
         subjectId,
         semester: Number(semester),
+        area,
         academicPeriod: period,
       });
       toast.success('Asignatura ubicada en el plan');
@@ -364,8 +393,23 @@ function AddSubjectModal({
             ))}
           </select>
           <p className="text-xs text-gray-500">
-            Si ya está en el plan, se mueve al semestre indicado.
+            Si ya está en el plan, se mueve al semestre y al área indicados.
           </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="add-area">Área de formación</Label>
+          <select
+            id="add-area"
+            value={area}
+            onChange={(e) => setArea(e.target.value as FormationArea)}
+            className={cn(selectClass, 'w-full')}
+          >
+            {(Object.keys(AREAS) as FormationArea[]).map((a) => (
+              <option key={a} value={a}>
+                {AREAS[a].label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="add-semester">Semestre</Label>

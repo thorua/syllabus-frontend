@@ -7,6 +7,13 @@ import type { SignInput } from '../api/endpoints';
 const certificateKey = ['my-certificate'] as const;
 const signaturesKey = (id: string) => [...syllabusKeys.detail(id), 'signatures'] as const;
 
+const pendingKey = ['signatures', 'pending'] as const;
+
+/** Syllabus vigentes que esperan la firma del usuario. */
+export function usePendingSignatures(enabled = true) {
+  return useQuery({ queryKey: pendingKey, queryFn: signaturesApi.pending, enabled });
+}
+
 /** Firmas de la versión vigente y si el usuario puede firmar el paso pendiente. */
 export function useSyllabusSignatures(id: string) {
   return useQuery({
@@ -26,6 +33,29 @@ export function useSignSyllabus() {
         queryClient.invalidateQueries({ queryKey: syllabusKeys.all }),
         queryClient.invalidateQueries({ queryKey: studyPlanKeys.all }),
         queryClient.invalidateQueries({ queryKey: certificateKey }),
+        queryClient.invalidateQueries({ queryKey: pendingKey }),
+      ]),
+  });
+}
+
+/** Firma por lote: varios syllabus revisados con una sola contraseña. */
+export function useSignBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      items,
+      password,
+      certificate,
+    }: {
+      items: { id: string; version: number }[];
+      password: string;
+      certificate?: File | null;
+    }) => signaturesApi.signBatch(items, password, certificate),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: syllabusKeys.all }),
+        queryClient.invalidateQueries({ queryKey: studyPlanKeys.all }),
+        queryClient.invalidateQueries({ queryKey: pendingKey }),
       ]),
   });
 }

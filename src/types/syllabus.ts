@@ -20,7 +20,7 @@ export interface SyllabusSection {
  */
 export type SyllabusSubject = Omit<
   Subject,
-  'isActive' | 'syllabusCount' | 'createdAt' | 'updatedAt' | 'programs'
+  'isActive' | 'syllabusCount' | 'createdAt' | 'updatedAt' | 'programs' | 'requiresSyllabus'
 > & {
   programs?: Subject['programs'];
   coordinationEmail?: string | null;
@@ -36,6 +36,26 @@ export interface SignatureCertificate {
   serial: string;
   notAfter: string;
   uploadedAt: string;
+}
+
+/** Syllabus vigente que espera la firma del usuario. */
+export interface PendingSignature {
+  id: string;
+  title: string;
+  academicPeriod: string;
+  subjectCode: string;
+  subjectName: string;
+  offeredBy: string;
+  version: number;
+  step: SignatureStep;
+  updatedAt: string;
+}
+
+export interface BatchSignResult {
+  id: string;
+  signed: boolean;
+  message: string;
+  state?: VerificationState | null;
 }
 
 export interface SyllabusSignatures {

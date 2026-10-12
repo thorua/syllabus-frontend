@@ -45,6 +45,17 @@ export interface Program {
   updatedAt?: string;
 }
 
+/** Área de formación de una asignatura dentro de un plan (como en los planes publicados). */
+export type FormationArea =
+  | 'BASICA'
+  | 'PROFESIONAL'
+  | 'SOCIOHUMANISTICA'
+  | 'COMPLEMENTARIA'
+  | 'FUNDAMENTACION'
+  | 'PROFUNDIZACION'
+  | 'INVESTIGACION'
+  | 'INSTITUCIONAL';
+
 /** Programa que incluye la asignatura en uno de sus planes de estudio. */
 export interface SubjectInPlan {
   id: string;
@@ -55,6 +66,7 @@ export interface SubjectInPlan {
   plan: string;
   planActive: boolean;
   semester: number;
+  area: FormationArea;
 }
 
 export interface Subject {
@@ -74,6 +86,8 @@ export interface Subject {
   hoursDirigido?: number | null;
   hoursIndependiente?: number | null;
   prerequisites?: string | null;
+  /** Falso en los espacios del plan sin syllabus propio (curso libre, electiva, énfasis, práctica). */
+  requiresSyllabus: boolean;
   isActive: boolean;
   syllabusCount: number;
   createdAt?: string;
@@ -118,6 +132,7 @@ export interface SubjectInput {
   hoursDirigido?: number | null;
   hoursIndependiente?: number | null;
   prerequisites?: string;
+  requiresSyllabus?: boolean;
   isActive?: boolean;
 }
 
@@ -144,15 +159,23 @@ export interface StudyPlan {
 
 /** Estado del syllabus de una asignatura de la malla en el período consultado. */
 export type CurriculumState =
-  'VERIFICADO' | 'PENDIENTE_REGISTRO' | 'PENDIENTE_FIRMA' | 'BORRADOR' | 'SIN_SYLLABUS';
+  | 'VERIFICADO'
+  | 'PENDIENTE_REGISTRO'
+  | 'PENDIENTE_FIRMA'
+  | 'BORRADOR'
+  | 'SIN_SYLLABUS'
+  /** Espacio del plan sin syllabus propio: no cuenta como faltante. */
+  | 'ESPACIO';
 
 export interface CurriculumSubject {
   subjectId: string;
   code: string;
   name: string;
   credits: number;
-  /** Departamento (o programa de posgrado) que ofrece la asignatura. */
+  area: FormationArea;
+  /** Departamento (o programa de posgrado) que ofrece la asignatura, y su código. */
   offeredBy: string;
+  offeredByCode: string;
   isActive: boolean;
   syllabusId: string | null;
   state: CurriculumState;

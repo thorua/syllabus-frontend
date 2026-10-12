@@ -16,6 +16,7 @@ import {
   usePrograms,
   useUsers,
   useSubjects,
+  usePendingSignatures,
 } from '../hooks';
 import { getRoleLabel, getDescriptiveTitle, getOfferedBy } from '../lib/utils';
 import { syllabusAccess } from '../lib/syllabusAccess';
@@ -50,6 +51,7 @@ export function DashboardPage() {
   const { data: statsUsers, isLoading: loadingUsers } = useUsers({ limit: 1 }, canReadUsers);
   const { data: statsDepartments, isLoading: loadingDepartments } = useDepartments();
   const { data: statsSubjects, isLoading: loadingSubjects } = useSubjects();
+  const { data: pendientes = [] } = usePendingSignatures(can('syllabus:sign'));
 
   const stats = {
     syllabus: statsSyllabus?.pagination?.total || 0,
@@ -187,6 +189,15 @@ export function DashboardPage() {
           ) : undefined
         }
       >
+        {pendientes.length > 0 && (
+          <Link
+            to="/firmas"
+            className="mb-4 block rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 hover:bg-amber-100"
+          >
+            Tiene <span className="font-semibold">{pendientes.length}</span> syllabus pendientes de
+            su firma digital. Revíselos y fírmelos en Pendientes de firma.
+          </Link>
+        )}
         {/* Stats Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((card) => (

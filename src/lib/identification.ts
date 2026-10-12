@@ -7,7 +7,9 @@ export interface IdentificationRow {
   email?: boolean;
 }
 
-const hours = (h?: number | null) => (h == null ? '—' : String(h));
+/** Un dato que la asignatura aún no tiene se muestra como pendiente (igual que en el PDF). */
+const POR_DEFINIR = 'Por definir';
+const hours = (h?: number | null) => (h == null ? POR_DEFINIR : String(h));
 
 /**
  * Tabla «1. IDENTIFICACIÓN» del formato GFR-FOR-005, con los datos de la asignatura. Mismas reglas
@@ -41,7 +43,7 @@ export function identificationRows(
       label: 'Horas de trabajo independiente/asincrónico',
       value: hours(subject.hoursIndependiente),
     },
-    { label: 'Prerrequisitos', value: subject.prerequisites || 'Ninguno' },
+    { label: 'Prerrequisitos', value: subject.prerequisites || POR_DEFINIR },
     { label: 'Año- Periodo académico', value: academicPeriod },
     {
       label: 'Docente (s)',

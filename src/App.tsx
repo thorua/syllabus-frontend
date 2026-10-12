@@ -15,6 +15,7 @@ import { SubjectsPage } from './pages/catalog/SubjectsPage';
 import { FacultiesPage } from './pages/catalog/FacultiesPage';
 import { StudyPlansPage } from './pages/catalog/StudyPlansPage';
 import { CertificatePage } from './pages/CertificatePage';
+import { PendingSignaturesPage } from './pages/PendingSignaturesPage';
 import { SyllabusListPage } from './pages/syllabus/SyllabusListPage';
 import { SyllabusDetailPage } from './pages/syllabus/SyllabusDetailPage';
 import { SyllabusFormPage } from './pages/syllabus/SyllabusFormPage';
@@ -195,6 +196,7 @@ function AppRoutes() {
         { path: '/faculties', permission: 'faculty:create', page: <FacultiesPage /> },
         { path: '/study-plans', permission: 'program:read', page: <StudyPlansPage /> },
         { path: '/firma-digital', permission: 'syllabus:sign', page: <CertificatePage /> },
+        { path: '/firmas', permission: 'syllabus:sign', page: <PendingSignaturesPage /> },
       ].map(({ path, permission, page }) => (
         <Route
           key={path}

@@ -1,4 +1,4 @@
-import type { CurriculumState, Syllabus, VerificationState } from '../types';
+import type { CurriculumState, FormationArea, Syllabus, VerificationState } from '../types';
 
 /**
  * Convenciones de color de la verificación con firma digital, comunes al listado de syllabus, al
@@ -37,6 +37,23 @@ export const CONVENTIONS: Record<CurriculumState, Convention> = {
     mark: '✘',
     className: 'border-red-300 bg-red-50 text-red-700',
   },
+  ESPACIO: {
+    label: 'Espacio del plan (sin syllabus propio)',
+    mark: '·',
+    className: 'border-dashed border-gray-300 bg-white text-gray-500',
+  },
+};
+
+/** Áreas de formación con los colores de los planes de estudio publicados. */
+export const AREAS: Record<FormationArea, { label: string; className: string }> = {
+  BASICA: { label: 'Básica', className: 'bg-sky-500' },
+  PROFESIONAL: { label: 'Profesional', className: 'bg-uam-blue' },
+  SOCIOHUMANISTICA: { label: 'Socio-humanística', className: 'bg-fuchsia-600' },
+  COMPLEMENTARIA: { label: 'Complementaria', className: 'bg-indigo-800' },
+  FUNDAMENTACION: { label: 'Fundamentación', className: 'bg-sky-500' },
+  PROFUNDIZACION: { label: 'Profundización', className: 'bg-uam-blue' },
+  INVESTIGACION: { label: 'Investigación', className: 'bg-fuchsia-600' },
+  INSTITUCIONAL: { label: 'Institucional', className: 'bg-teal-600' },
 };
 
 /** Estado de un syllabus para la tabla de convenciones (los inactivos cuentan como sin syllabus). */

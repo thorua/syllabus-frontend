@@ -7,8 +7,11 @@ import type {
   Curriculum,
   Department,
   DepartmentInput,
+  BatchSignResult,
   Faculty,
   FacultyInput,
+  FormationArea,
+  PendingSignature,
   SignatureCertificate,
   StudyPlan,
   SyllabusSignatures,
@@ -111,6 +114,19 @@ export const signaturesApi = {
     if (input.certificate) form.append('certificate', input.certificate);
     return data(api.post<SyllabusSignatures>(`/syllabus/${id}/signatures`, form, multipart));
   },
+  pending: () => data(api.get<PendingSignature[]>('/signatures/pending')),
+  /** Firma varios syllabus con el certificado registrado (o el enviado) y una sola contraseña. */
+  signBatch: (
+    items: { id: string; version: number }[],
+    password: string,
+    certificate?: File | null,
+  ) => {
+    const form = new FormData();
+    form.append('items', JSON.stringify(items));
+    form.append('password', password);
+    if (certificate) form.append('certificate', certificate);
+    return data(api.post<BatchSignResult[]>('/signatures/batch', form, multipart));
+  },
   myCertificate: () =>
     api
       .get<SignatureCertificate | ''>('/auth/me/certificate')
@@ -209,11 +225,17 @@ export const studyPlansApi = {
     data(api.post<StudyPlan>('/study-plans', { programId, name })),
   update: (id: string, programId: string, name: string, isActive: boolean) =>
     data(api.put<StudyPlan>(`/study-plans/${id}`, { programId, name, isActive })),
-  placeSubject: (id: string, subjectId: string, semester: number, academicPeriod: string) =>
+  placeSubject: (
+    id: string,
+    subjectId: string,
+    semester: number,
+    area: FormationArea,
+    academicPeriod: string,
+  ) =>
     data(
       api.put<Curriculum>(
         `/study-plans/${id}/subjects/${subjectId}`,
-        { semester },
+        { semester, area },
         { params: { academicPeriod } },
       ),
     ),

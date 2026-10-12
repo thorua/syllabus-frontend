@@ -8,6 +8,7 @@ import {
 } from '../api/endpoints';
 import type {
   DepartmentInput,
+  FormationArea,
   FacultyInput,
   ProgramInput,
   SubjectFilters,
@@ -155,9 +156,10 @@ export const usePlaceSubject = () =>
       planId,
       subjectId,
       semester,
+      area,
       academicPeriod,
-    }: PlanSubjectVariables & { semester: number }) =>
-      studyPlansApi.placeSubject(planId, subjectId, semester, academicPeriod),
+    }: PlanSubjectVariables & { semester: number; area: FormationArea }) =>
+      studyPlansApi.placeSubject(planId, subjectId, semester, area, academicPeriod),
   );
 
 export const useRemovePlanSubject = () =>

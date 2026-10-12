@@ -12,6 +12,8 @@ export {
 export {
   useSyllabusSignatures,
   useSignSyllabus,
+  usePendingSignatures,
+  useSignBatch,
   useMyCertificate,
   useSaveCertificate,
   useDeleteCertificate,
