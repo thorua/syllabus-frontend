@@ -1,3 +1,4 @@
+import { programNames } from './utils';
 import type { SyllabusSubject } from '../types';
 
 export interface IdentificationRow {
@@ -10,14 +11,19 @@ const hours = (h?: number | null) => (h == null ? '—' : String(h));
 
 /**
  * Tabla «1. IDENTIFICACIÓN» del formato GFR-FOR-005, con los datos de la asignatura. Mismas reglas
- * que el PDF (backend: exportacion/AlmeraPdf.java): si el programa tiene coordinación, «Docente (s)»
- * queda vacío y el correo es el de la coordinación; si no, se muestran el docente y su correo.
+ * que el PDF (backend: exportacion/AlmeraPdf.java): si quien ofrece la asignatura (departamento o
+ * programa de posgrado) tiene coordinación, «Docente (s)» queda vacío y el correo es el de la
+ * coordinación; si no, se muestran el docente y su correo. Los programas salen de los planes de estudio.
  */
 export function identificationRows(
   subject: SyllabusSubject,
   academicPeriod: string,
 ): IdentificationRow[] {
-  const coordination = subject.program.coordinationEmail;
+  // Al crear, la asignatura aún no trae el correo resuelto: se toma de quien la ofrece.
+  const coordination =
+    subject.coordinationEmail ??
+    subject.department?.coordinationEmail ??
+    subject.program?.coordinationEmail;
   const professor = subject.professor;
   return [
     { label: 'Nombre asignatura', value: subject.name },
@@ -26,7 +32,7 @@ export function identificationRows(
       label: 'Departamento (área)',
       value: subject.department?.name ?? 'No aplica (posgrado)',
     },
-    { label: 'Programa (s) en los que se ofrece', value: subject.program.name },
+    { label: 'Programa (s) en los que se ofrece', value: programNames(subject) },
     { label: 'Modalidad de la asignatura', value: subject.modality || 'Presencial' },
     { label: 'Número de créditos', value: String(subject.credits) },
     { label: 'Horas de trabajo presencial/sincrónico', value: hours(subject.hoursPresencial) },

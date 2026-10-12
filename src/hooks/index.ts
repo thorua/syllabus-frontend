@@ -7,7 +7,15 @@ export {
   useCreateSyllabus,
   useUpdateSyllabus,
   useDeactivateSyllabus,
+  useRenewSyllabus,
 } from './useSyllabus';
+export {
+  useSyllabusSignatures,
+  useSignSyllabus,
+  useMyCertificate,
+  useSaveCertificate,
+  useDeleteCertificate,
+} from './useSignatures';
 export { useSettings, useUpdateSettings, useUploadLogo } from './useSettings';
 export {
   useExportSyllabus,
@@ -17,6 +25,14 @@ export {
 } from './useExport';
 export { useUsers, usePermissionCatalog, useSaveUser, useDeactivateUser } from './useUsers';
 export {
+  useFaculties,
+  useStudyPlans,
+  useCurriculum,
+  useSaveFaculty,
+  useDeactivateFaculty,
+  useSaveStudyPlan,
+  usePlaceSubject,
+  useRemovePlanSubject,
   useDepartments,
   usePrograms,
   useSubjects,

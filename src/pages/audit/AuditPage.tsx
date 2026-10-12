@@ -28,6 +28,7 @@ const ACTION_LABELS: Record<string, string> = {
   AFFILIATIONS_UPDATE: 'Afiliaciones actualizadas',
   ASSIGN: 'Asignación',
   EXPORT: 'Exportación',
+  SIGN: 'Firma digital',
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -37,14 +38,18 @@ const ACTION_COLORS: Record<string, string> = {
   LOGIN_FAILED: 'bg-red-100 text-red-800',
   PERMISSIONS_UPDATE: 'bg-amber-100 text-amber-800',
   AFFILIATIONS_UPDATE: 'bg-purple-100 text-purple-800',
+  SIGN: 'bg-emerald-100 text-emerald-800',
 };
 
 const ENTITY_LABELS: Record<string, string> = {
   session: 'Sesión',
   user: 'Usuario',
+  faculty: 'Facultad',
   department: 'Departamento',
   program: 'Programa',
   subject: 'Asignatura',
+  study_plan: 'Plan de estudios',
+  certificate: 'Certificado de firma',
   syllabus: 'Syllabus',
   config: 'Configuración',
 };

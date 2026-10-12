@@ -4,8 +4,14 @@ import type {
   AuditFilters,
   AuditLog,
   AuditOptions,
+  Curriculum,
   Department,
   DepartmentInput,
+  Faculty,
+  FacultyInput,
+  SignatureCertificate,
+  StudyPlan,
+  SyllabusSignatures,
   LoginResponse,
   PaginatedResponse,
   Program,
@@ -75,6 +81,47 @@ export const syllabusApi = {
   getVersions: (id: string) => data(api.get<SyllabusVersion[]>(`/syllabus/${id}/versions`)),
   getVersion: (id: string, versionId: string) =>
     data(api.get<SyllabusVersion>(`/syllabus/${id}/versions/${versionId}`)),
+  /** Copia el syllabus a otro período sin ajustes (queda registrado en el historial). */
+  renew: (id: string, academicPeriod: string) =>
+    data(api.post<Syllabus>(`/syllabus/${id}/renew`, { academicPeriod })),
+};
+
+export interface SignInput {
+  version: number;
+  password: string;
+  /** Si no se envía, se usa el certificado registrado. */
+  certificate?: File | null;
+  remember?: boolean;
+}
+
+const multipart = { headers: { 'Content-Type': 'multipart/form-data' } };
+
+export const signaturesApi = {
+  get: (id: string) => data(api.get<SyllabusSignatures>(`/syllabus/${id}/signatures`)),
+  preview: (id: string) =>
+    file(
+      api.get<Blob>(`/syllabus/${id}/signatures/preview`, { responseType: 'blob' }),
+      'syllabus-por-firmar.pdf',
+    ),
+  sign: (id: string, input: SignInput) => {
+    const form = new FormData();
+    form.append('version', String(input.version));
+    form.append('password', input.password);
+    form.append('remember', String(Boolean(input.remember)));
+    if (input.certificate) form.append('certificate', input.certificate);
+    return data(api.post<SyllabusSignatures>(`/syllabus/${id}/signatures`, form, multipart));
+  },
+  myCertificate: () =>
+    api
+      .get<SignatureCertificate | ''>('/auth/me/certificate')
+      .then((r) => (r.status === 204 || !r.data ? null : r.data)),
+  saveCertificate: (certificate: File, password: string) => {
+    const form = new FormData();
+    form.append('certificate', certificate);
+    form.append('password', password);
+    return data(api.put<SignatureCertificate>('/auth/me/certificate', form, multipart));
+  },
+  deleteCertificate: () => data(api.delete<{ message: string }>('/auth/me/certificate')),
 };
 
 export const exportApi = {
@@ -95,11 +142,7 @@ export const settingsApi = {
   uploadLogo: (file: File) => {
     const form = new FormData();
     form.append('file', file);
-    return data(
-      api.post<InstitutionalConfig>('/settings/logo', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }),
-    );
+    return data(api.post<InstitutionalConfig>('/settings/logo', form, multipart));
   },
 };
 
@@ -120,6 +163,14 @@ export const auditApi = {
   getAll: (filters: AuditFilters = {}) =>
     data(api.get<PaginatedResponse<AuditLog>>('/audit', { params: filters })),
   options: () => data(api.get<AuditOptions>('/audit/options')),
+};
+
+export const facultiesApi = {
+  getAll: (includeInactive = false) =>
+    data(api.get<Faculty[]>('/faculties', { params: { includeInactive } })),
+  create: (input: FacultyInput) => data(api.post<Faculty>('/faculties', input)),
+  update: (id: string, input: FacultyInput) => data(api.put<Faculty>(`/faculties/${id}`, input)),
+  deactivate: (id: string) => data(api.delete<{ message: string }>(`/faculties/${id}`)),
 };
 
 export const departmentsApi = {
@@ -147,4 +198,29 @@ export const subjectsApi = {
   deactivate: (id: string) => data(api.delete<{ message: string }>(`/subjects/${id}`)),
   assignProfessor: (id: string, professorId: string | null) =>
     data(api.put<Subject>(`/subjects/${id}/assign-professor`, { professorId })),
+};
+
+export const studyPlansApi = {
+  getAll: (programId: string) =>
+    data(api.get<StudyPlan[]>('/study-plans', { params: { programId } })),
+  curriculum: (id: string, academicPeriod: string) =>
+    data(api.get<Curriculum>(`/study-plans/${id}/curriculum`, { params: { academicPeriod } })),
+  create: (programId: string, name: string) =>
+    data(api.post<StudyPlan>('/study-plans', { programId, name })),
+  update: (id: string, programId: string, name: string, isActive: boolean) =>
+    data(api.put<StudyPlan>(`/study-plans/${id}`, { programId, name, isActive })),
+  placeSubject: (id: string, subjectId: string, semester: number, academicPeriod: string) =>
+    data(
+      api.put<Curriculum>(
+        `/study-plans/${id}/subjects/${subjectId}`,
+        { semester },
+        { params: { academicPeriod } },
+      ),
+    ),
+  removeSubject: (id: string, subjectId: string, academicPeriod: string) =>
+    data(
+      api.delete<Curriculum>(`/study-plans/${id}/subjects/${subjectId}`, {
+        params: { academicPeriod },
+      }),
+    ),
 };

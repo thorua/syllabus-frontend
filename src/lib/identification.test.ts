@@ -2,20 +2,29 @@ import { describe, expect, it } from 'vitest';
 import { identificationRows } from './identification';
 import type { SyllabusSubject } from '../types';
 
+const enPlan = (name: string, planActive = true) => ({
+  id: name,
+  name,
+  code: name,
+  level: 'PREGRADO' as const,
+  planId: `plan-${name}`,
+  plan: 'Plan 2026',
+  planActive,
+  semester: 1,
+});
+
 const subject = (coordinationEmail?: string): SyllabusSubject => ({
   id: 's1',
-  name: 'Base de Datos I',
-  code: 'SIS201',
+  name: 'Matemáticas I',
+  code: 'MAT100',
   credits: 4,
-  semester: 4,
-  program: {
-    id: 'p1',
-    name: 'Ingeniería de Sistemas',
-    code: 'IS',
-    level: 'PREGRADO',
-    coordinationEmail,
-    isActive: true,
-  },
+  coordinationEmail,
+  programs: [
+    enPlan('Ingeniería de Sistemas'),
+    enPlan('Ingeniería Electrónica'),
+    enPlan('Ingeniería de Sistemas'),
+    enPlan('Ingeniería Mecánica', false),
+  ],
   professor: { id: 'u1', name: 'Carlos Andrés Martínez', email: 'profesor@autonoma.edu.co' },
   hoursPresencial: 4,
 });
@@ -26,9 +35,16 @@ const value = (rows: ReturnType<typeof identificationRows>, label: string) =>
 // Mismas reglas que el PDF (backend ExportacionTest · elContactoEsLaCoordinacionYSoloSinCoordinacionElDocente).
 describe('identificationRows', () => {
   it('con coordinación deja vacío el docente y muestra el correo de la coordinación', () => {
-    const rows = identificationRows(subject('coordinacion.sistemas@autonoma.edu.co'), '2026-01');
+    const rows = identificationRows(subject('matematicas@autonoma.edu.co'), '2026-01');
     expect(value(rows, 'Docente (s)')).toBe('');
-    expect(value(rows, 'E-mail docente (s)')).toBe('coordinacion.sistemas@autonoma.edu.co');
+    expect(value(rows, 'E-mail docente (s)')).toBe('matematicas@autonoma.edu.co');
+  });
+
+  it('lista una vez cada programa con plan vigente que incluye la asignatura', () => {
+    const rows = identificationRows(subject(), '2026-01');
+    expect(value(rows, 'Programa (s) en los que se ofrece')).toBe(
+      'Ingeniería de Sistemas, Ingeniería Electrónica',
+    );
   });
 
   it('sin coordinación muestra el docente asignado y su correo', () => {

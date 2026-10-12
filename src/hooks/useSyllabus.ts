@@ -71,3 +71,8 @@ export const useUpdateSyllabus = () =>
   );
 
 export const useDeactivateSyllabus = () => useSyllabusMutation(syllabusApi.deactivate);
+
+export const useRenewSyllabus = () =>
+  useSyllabusMutation(({ id, academicPeriod }: { id: string; academicPeriod: string }) =>
+    syllabusApi.renew(id, academicPeriod),
+  );

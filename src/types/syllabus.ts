@@ -14,11 +14,48 @@ export interface SyllabusSection {
   order: number;
 }
 
-/** Datos de la asignatura incluidos en el syllabus. */
+/**
+ * Datos de la asignatura incluidos en el syllabus. programs solo viene en el detalle;
+ * coordinationEmail es el correo de la coordinación que la ofrece (departamento o posgrado).
+ */
 export type SyllabusSubject = Omit<
   Subject,
-  'isActive' | 'syllabusCount' | 'createdAt' | 'updatedAt'
->;
+  'isActive' | 'syllabusCount' | 'createdAt' | 'updatedAt' | 'programs'
+> & {
+  programs?: Subject['programs'];
+  coordinationEmail?: string | null;
+};
+
+/** Firmas de la versión vigente: coordinación del departamento y luego Registro Académico. */
+export type VerificationState = 'SIN_FIRMAS' | 'PENDIENTE_REGISTRO' | 'VERIFICADO';
+export type SignatureStep = 'DEPARTAMENTO' | 'REGISTRO';
+
+export interface SignatureCertificate {
+  subject: string;
+  issuer: string;
+  serial: string;
+  notAfter: string;
+  uploadedAt: string;
+}
+
+export interface SyllabusSignatures {
+  state: VerificationState;
+  version: number;
+  /** Solo un syllabus activo se firma. */
+  signable: boolean;
+  signatures: {
+    step: SignatureStep;
+    signerName: string;
+    certificateSubject: string;
+    certificateIssuer: string;
+    signedAt: string;
+  }[];
+  nextStep?: SignatureStep | null;
+  /** Cargo al que le corresponde la firma pendiente. */
+  nextSigner?: string | null;
+  canSign: boolean;
+  storedCertificate?: SignatureCertificate | null;
+}
 
 export interface Syllabus {
   id: string;
@@ -34,6 +71,8 @@ export interface Syllabus {
   /** Solo en el detalle. */
   sections?: SyllabusSection[];
   currentVersion?: number;
+  /** Estado de las firmas de la versión vigente. */
+  verification: VerificationState;
   /** Dentro del alcance de gestión del usuario (editar, desactivar, versiones según permisos). */
   canManage: boolean;
   createdAt: string;

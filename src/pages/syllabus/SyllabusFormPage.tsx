@@ -104,15 +104,23 @@ export function SyllabusFormPage() {
     );
   }
   return (
-    <SyllabusForm key={id ?? 'new'} template={config.evaluationTemplate} syllabus={syllabus} />
+    <SyllabusForm
+      key={id ?? 'new'}
+      template={config.evaluationTemplate}
+      maxLength={config.maxSectionLength}
+      syllabus={syllabus}
+    />
   );
 }
 
 function SyllabusForm({
   template,
+  maxLength,
   syllabus,
 }: {
   template: EvaluationTemplate;
+  /** Máximo de caracteres por sección (Configuración). */
+  maxLength: number;
   syllabus?: Syllabus;
 }) {
   const navigate = useNavigate();
@@ -204,6 +212,13 @@ function SyllabusForm({
     e.preventDefault();
     if (sections.some((s) => !s.title.trim())) {
       toast.error('Todas las secciones deben tener título');
+      return;
+    }
+    const tooLong = sections.find((s) => !s.evaluation && s.content.trim().length > maxLength);
+    if (tooLong) {
+      toast.error(
+        `La sección «${tooLong.title}» tiene ${tooLong.content.trim().length} caracteres; el máximo permitido es ${maxLength}.`,
+      );
       return;
     }
     if (status === SyllabusStatus.ACTIVO) {
@@ -522,7 +537,18 @@ function SyllabusForm({
                       />
                     )}
                     {!section.evaluation && section.sectionType !== SectionType.IDENTIFICATION && (
-                      <p className="text-xs text-gray-500">{FORMAT_HINT}</p>
+                      <div className="flex flex-wrap justify-between gap-2 text-xs text-gray-500">
+                        <p>{FORMAT_HINT}</p>
+                        <p
+                          className={
+                            section.content.trim().length > maxLength
+                              ? 'font-semibold text-red-600'
+                              : undefined
+                          }
+                        >
+                          {section.content.trim().length} / {maxLength} caracteres
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

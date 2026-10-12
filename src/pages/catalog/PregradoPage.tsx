@@ -16,6 +16,7 @@ import { getErrorMessage } from '../../api/client';
 import type { Department, Program } from '../../types';
 import {
   useAuth,
+  useFaculties,
   useDepartments,
   usePrograms,
   useSaveDepartment,
@@ -30,24 +31,25 @@ type PendingDeactivation =
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm';
 
-/** UC5 departamentos y UC6 programas de pregrado (siempre pertenecen a un departamento). */
+/**
+ * UC5 departamentos y UC6 programas de pregrado. Cada departamento pertenece a una facultad y su
+ * coordinación es el contacto de los syllabus de sus asignaturas; un departamento puede no tener
+ * programas propios (p. ej. Matemáticas) y ofrecer asignaturas a los planes de otros programas.
+ */
 export function PregradoPage() {
   const { can } = useAuth();
   const [filterDept, setFilterDept] = useState('');
   const [showInactive, setShowInactive] = useState(false);
   const [showDeptModal, setShowDeptModal] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
-  const [deptFormData, setDeptFormData] = useState({ name: '', code: '' });
+  const emptyDept = { name: '', code: '', facultyId: '', coordinationEmail: '' };
+  const [deptFormData, setDeptFormData] = useState(emptyDept);
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
-  const [programFormData, setProgramFormData] = useState({
-    name: '',
-    code: '',
-    departmentId: '',
-    coordinationEmail: '',
-  });
+  const [programFormData, setProgramFormData] = useState({ name: '', code: '', departmentId: '' });
   const [pending, setPending] = useState<PendingDeactivation | null>(null);
 
+  const { data: faculties = [] } = useFaculties();
   const { data: departments = [] } = useDepartments(showInactive);
   const { data: allPrograms = [], isLoading: loading } = usePrograms(
     filterDept || undefined,
@@ -63,19 +65,24 @@ export function PregradoPage() {
 
   const openCreateDept = () => {
     setEditingDept(null);
-    setDeptFormData({ name: '', code: '' });
+    setDeptFormData(emptyDept);
     setShowDeptModal(true);
   };
 
   const openEditDept = (dept: Department) => {
     setEditingDept(dept);
-    setDeptFormData({ name: dept.name, code: dept.code });
+    setDeptFormData({
+      name: dept.name,
+      code: dept.code,
+      facultyId: dept.faculty.id,
+      coordinationEmail: dept.coordinationEmail ?? '',
+    });
     setShowDeptModal(true);
   };
 
   const openCreateProgram = () => {
     setEditingProgram(null);
-    setProgramFormData({ name: '', code: '', departmentId: filterDept, coordinationEmail: '' });
+    setProgramFormData({ name: '', code: '', departmentId: filterDept });
     setShowProgramModal(true);
   };
 
@@ -85,7 +92,6 @@ export function PregradoPage() {
       name: prog.name,
       code: prog.code,
       departmentId: prog.department?.id ?? '',
-      coordinationEmail: prog.coordinationEmail ?? '',
     });
     setShowProgramModal(true);
   };
@@ -134,7 +140,13 @@ export function PregradoPage() {
     try {
       await saveDepartment.mutateAsync({
         id: dept.id,
-        input: { name: dept.name, code: dept.code, isActive: true },
+        input: {
+          name: dept.name,
+          code: dept.code,
+          facultyId: dept.faculty.id,
+          coordinationEmail: dept.coordinationEmail ?? '',
+          isActive: true,
+        },
       });
       toast.success('Departamento activado');
     } catch (error) {
@@ -151,7 +163,6 @@ export function PregradoPage() {
           code: prog.code,
           level: 'PREGRADO',
           departmentId: prog.department?.id,
-          coordinationEmail: prog.coordinationEmail ?? '',
           isActive: true,
         },
       });
@@ -189,14 +200,9 @@ export function PregradoPage() {
       ),
     },
     {
-      key: 'coordinationEmail',
-      header: 'Coordinación',
-      render: (prog: Program) =>
-        prog.coordinationEmail ? (
-          <span className="text-gray-600">{prog.coordinationEmail}</span>
-        ) : (
-          <span className="text-gray-400">Sin coordinación (muestra el docente)</span>
-        ),
+      key: 'faculty',
+      header: 'Facultad',
+      render: (prog) => <span className="text-gray-500">{prog.faculty?.name || '—'}</span>,
     },
     {
       key: 'subjectCount',
@@ -276,6 +282,11 @@ export function PregradoPage() {
                       <div>
                         <h3 className="font-medium">{dept.name}</h3>
                         <p className="text-sm text-gray-500">Código: {dept.code}</p>
+                        <p className="text-xs text-gray-500">{dept.faculty.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {dept.coordinationEmail ??
+                            'Sin correo de coordinación (muestra el docente)'}
+                        </p>
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                           <span>{dept.programCount ?? 0} programas</span>
                           <span>|</span>
@@ -384,6 +395,41 @@ export function PregradoPage() {
               required
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="dept-faculty">Facultad</Label>
+            <select
+              id="dept-faculty"
+              value={deptFormData.facultyId}
+              onChange={(e) => setDeptFormData({ ...deptFormData, facultyId: e.target.value })}
+              className={selectClass}
+              required
+            >
+              <option value="">Seleccione...</option>
+              {faculties.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dept-coord">Correo de coordinación</Label>
+            <Input
+              id="dept-coord"
+              type="email"
+              value={deptFormData.coordinationEmail}
+              onChange={(e) =>
+                setDeptFormData({ ...deptFormData, coordinationEmail: e.target.value })
+              }
+              placeholder="coordinacion@autonoma.edu.co"
+              maxLength={150}
+            />
+            <p className="text-xs text-gray-500">
+              Contacto de los syllabus de las asignaturas del departamento: el syllabus exportado
+              muestra este correo y deja vacío el docente. Sin correo, se muestran el docente
+              asignado y su correo.
+            </p>
+          </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setShowDeptModal(false)}>
               Cancelar
@@ -442,23 +488,9 @@ export function PregradoPage() {
               ))}
             </select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="prog-coord">Correo de coordinación</Label>
-            <Input
-              id="prog-coord"
-              type="email"
-              value={programFormData.coordinationEmail}
-              onChange={(e) =>
-                setProgramFormData({ ...programFormData, coordinationEmail: e.target.value })
-              }
-              placeholder="coordinacion.programa@autonoma.edu.co"
-              maxLength={150}
-            />
-            <p className="text-xs text-gray-500">
-              Si se indica, el syllabus exportado muestra este correo y deja vacío el docente. Sin
-              coordinación, se muestran el docente asignado a la asignatura y su correo.
-            </p>
-          </div>
+          <p className="text-xs text-gray-500">
+            Las asignaturas del programa se agregan desde su plan de estudios (Planes de estudio).
+          </p>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setShowProgramModal(false)}>
               Cancelar

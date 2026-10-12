@@ -1,10 +1,12 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { SyllabusStatusBadge } from '../../components/ui/status-badge';
 import { SectionContent } from '../../components/syllabus/SectionContent';
+import { SignaturePanel } from '../../components/syllabus/SignaturePanel';
+import { RenewModal } from '../../components/syllabus/RenewModal';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../api/client';
 import {
@@ -20,10 +22,10 @@ import {
   formatDate,
   getSubjectCode,
   getSubjectName,
-  getDepartmentName,
+  getOfferedBy,
   getProgramName,
   getSubjectCredits,
-  getSubjectSemester,
+  getProgramSemesters,
   getProfessorName,
   getCreatorName,
   getModifierName,
@@ -40,6 +42,7 @@ import {
   CreditCard,
   GraduationCap,
   FileText,
+  CopyPlus,
 } from 'lucide-react';
 
 /** UC10: contenido vigente del syllabus; a quien lo gestiona le muestra también su historial. */
@@ -51,6 +54,7 @@ export function SyllabusDetailPage() {
   const { data: config } = useSettings();
   const access = syllabus ? syllabusAccess(syllabus, can) : null;
   const { data: versions = [] } = useSyllabusVersions(id, !!access?.versions);
+  const [renewing, setRenewing] = useState(false);
   const exportMutation = useExportSyllabus();
   const printMutation = usePrintSyllabus();
 
@@ -116,7 +120,7 @@ export function SyllabusDetailPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
             <SyllabusStatusBadge status={syllabus.status} />
             {can('syllabus:export') && (
               <Button
@@ -139,6 +143,17 @@ export function SyllabusDetailPage() {
               >
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir
+              </Button>
+            )}
+            {access.edit && can('syllabus:create') && syllabus.status !== 'INACTIVO' && (
+              <Button
+                variant="outline"
+                onClick={() => setRenewing(true)}
+                title="Copia el syllabus a otro período sin ajustes"
+                className="border-uam-gray-mid/30 hover:bg-uam-blue hover:text-white hover:border-uam-blue"
+              >
+                <CopyPlus className="mr-2 h-4 w-4" />
+                Renovar
               </Button>
             )}
             {access.edit && (
@@ -164,12 +179,12 @@ export function SyllabusDetailPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <InfoItem
                 icon={<GraduationCap className="h-4 w-4" />}
-                label="Departamento"
-                value={syllabus.subject.department ? getDepartmentName(syllabus) : 'Posgrado'}
+                label={syllabus.subject.department ? 'Departamento' : 'Posgrado'}
+                value={getOfferedBy(syllabus)}
               />
               <InfoItem
                 icon={<BookOpen className="h-4 w-4" />}
-                label="Programa"
+                label="Programas"
                 value={getProgramName(syllabus)}
               />
               <InfoItem
@@ -185,7 +200,7 @@ export function SyllabusDetailPage() {
               <InfoItem
                 icon={<GraduationCap className="h-4 w-4" />}
                 label="Semestre"
-                value={getSubjectSemester(syllabus)}
+                value={getProgramSemesters(syllabus)}
               />
               <InfoItem
                 icon={<User className="h-4 w-4" />}
@@ -205,6 +220,9 @@ export function SyllabusDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Aprobación con firma digital */}
+        {syllabus.status !== 'BORRADOR' && <SignaturePanel syllabus={syllabus} />}
 
         {/* Secciones */}
         {syllabus.sections && syllabus.sections.length > 0 && (
@@ -269,6 +287,7 @@ export function SyllabusDetailPage() {
           </Card>
         )}
       </div>
+      {renewing && <RenewModal syllabus={syllabus} onClose={() => setRenewing(false)} />}
     </Layout>
   );
 }

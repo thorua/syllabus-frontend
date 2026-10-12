@@ -15,6 +15,9 @@ import {
   ChevronLeft,
   X,
   FileCheck,
+  Landmark,
+  Network,
+  PenLine,
 } from 'lucide-react';
 
 interface NavItem {
@@ -30,9 +33,12 @@ const navItems: NavItem[] = [
   { label: 'Syllabus', href: '/syllabus', icon: <FileText size={20} /> },
   { label: 'Mis Asignaturas', href: '/my-subjects', icon: <GraduationCap size={20} />, visible: (can) => !can('syllabus:create') },
   { label: 'Usuarios', href: '/users', icon: <Users size={20} />, visible: (can) => can('user:read') },
+  { label: 'Facultades', href: '/faculties', icon: <Landmark size={20} />, visible: (can) => can('faculty:create') },
   { label: 'Pregrado', href: '/pregrado', icon: <GraduationCap size={20} />, visible: (can) => can('department:create') },
   { label: 'Posgrado', href: '/posgrado', icon: <Award size={20} />, visible: (can) => can('program:create') },
+  { label: 'Planes de estudio', href: '/study-plans', icon: <Network size={20} />, visible: (can) => can('program:read') },
   { label: 'Asignaturas', href: '/subjects', icon: <BookOpen size={20} />, visible: (can) => can('syllabus:create') },
+  { label: 'Mi firma digital', href: '/firma-digital', icon: <PenLine size={20} />, visible: (can) => can('syllabus:sign') },
   { label: 'Exportar', href: '/export', icon: <Download size={20} />, visible: (can) => can('syllabus:export') },
   { label: 'Auditoría', href: '/audit', icon: <FileCheck size={20} />, visible: (can) => can('audit:read') },
   { label: 'Configuración', href: '/settings', icon: <Settings size={20} />, visible: (can) => can('config:update') },

@@ -17,9 +17,18 @@ import {
   POSGRADO_LEVELS,
 } from '../../lib/programLevel';
 import type { Program, ProgramLevel } from '../../types';
-import { useAuth, usePrograms, useSaveProgram, useDeactivateProgram } from '../../hooks';
+import {
+  useAuth,
+  useFaculties,
+  usePrograms,
+  useSaveProgram,
+  useDeactivateProgram,
+} from '../../hooks';
 
-/** UC6 programas de posgrado: especialización, maestría y doctorado, sin departamento. */
+/**
+ * UC6 programas de posgrado: especialización, maestría y doctorado. No tienen departamento:
+ * pertenecen a una facultad, sus asignaturas son propias y las firma la coordinación del programa.
+ */
 export function PosgradoPage() {
   const { can } = useAuth();
   const [showInactive, setShowInactive] = useState(false);
@@ -29,10 +38,12 @@ export function PosgradoPage() {
     name: string;
     code: string;
     level: ProgramLevel;
+    facultyId: string;
     coordinationEmail: string;
-  }>({ name: '', code: '', level: 'MAESTRIA', coordinationEmail: '' });
+  }>({ name: '', code: '', level: 'MAESTRIA', facultyId: '', coordinationEmail: '' });
   const [toDeactivate, setToDeactivate] = useState<Program | null>(null);
 
+  const { data: faculties = [] } = useFaculties();
   const { data: allPrograms = [], isLoading: loading } = usePrograms(undefined, showInactive);
   const saveProgram = useSaveProgram();
   const deactivateProgram = useDeactivateProgram();
@@ -41,7 +52,7 @@ export function PosgradoPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setFormData({ name: '', code: '', level: 'MAESTRIA', coordinationEmail: '' });
+    setFormData({ name: '', code: '', level: 'MAESTRIA', facultyId: '', coordinationEmail: '' });
     setShowModal(true);
   };
 
@@ -51,6 +62,7 @@ export function PosgradoPage() {
       name: prog.name,
       code: prog.code,
       level: prog.level,
+      facultyId: prog.faculty?.id ?? '',
       coordinationEmail: prog.coordinationEmail ?? '',
     });
     setShowModal(true);
@@ -87,6 +99,7 @@ export function PosgradoPage() {
           name: prog.name,
           code: prog.code,
           level: prog.level,
+          facultyId: prog.faculty?.id,
           coordinationEmail: prog.coordinationEmail ?? '',
           isActive: true,
         },
@@ -118,6 +131,11 @@ export function PosgradoPage() {
           {getLevelLabel(prog.level)}
         </span>
       ),
+    },
+    {
+      key: 'faculty',
+      header: 'Facultad',
+      render: (prog) => <span className="text-gray-500">{prog.faculty?.name || '—'}</span>,
     },
     {
       key: 'coordinationEmail',
@@ -171,7 +189,7 @@ export function PosgradoPage() {
     <Layout>
       <PageContainer
         title="Posgrado"
-        description="Programas de especialización, maestría y doctorado. El posgrado no pertenece a departamentos."
+        description="Programas de especialización, maestría y doctorado. El posgrado pertenece a una facultad, no a un departamento."
         action={
           can('program:create') ? (
             <Button onClick={openCreate}>
@@ -238,6 +256,23 @@ export function PosgradoPage() {
               {POSGRADO_LEVELS.map((level) => (
                 <option key={level} value={level}>
                   {getLevelLabel(level)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pos-faculty">Facultad</Label>
+            <select
+              id="pos-faculty"
+              value={formData.facultyId}
+              onChange={(e) => setFormData({ ...formData, facultyId: e.target.value })}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              required
+            >
+              <option value="">Seleccione...</option>
+              {faculties.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
                 </option>
               ))}
             </select>

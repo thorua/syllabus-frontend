@@ -21,13 +21,10 @@ import {
   useSubjects,
 } from '../../hooks';
 import { getErrorMessage } from '../../api/client';
-import {
-  getDescriptiveTitle,
-  getDepartmentName,
-  getProgramName,
-  getCreatorName,
-} from '../../lib/utils';
+import { getDescriptiveTitle, getOfferedBy, getCreatorName } from '../../lib/utils';
 import { syllabusAccess } from '../../lib/syllabusAccess';
+import { conventionOf } from '../../lib/verification';
+import { ConventionBadge, ConventionsLegend } from '../../components/syllabus/Conventions';
 import { Plus, Search, Eye, Edit, Trash2, History as HistoryIcon, Filter, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SyllabusStatus, SyllabusStatusLabels } from '../../types';
@@ -120,8 +117,7 @@ export function SyllabusListPage() {
           <p className="font-semibold text-gray-900 truncate">{s.title}</p>
           <p className="text-sm text-uam-gray-dark truncate">{getDescriptiveTitle(s)}</p>
           <p className="text-xs text-uam-gray-mid mt-0.5">
-            {s.subject.department ? getDepartmentName(s) : 'Posgrado'} / {getProgramName(s)} ·
-            Creado por {getCreatorName(s)}
+            {getOfferedBy(s)} · Creado por {getCreatorName(s)}
           </p>
         </div>
       ),
@@ -131,6 +127,12 @@ export function SyllabusListPage() {
       header: 'Estado',
       className: 'w-32',
       render: (s) => <SyllabusStatusBadge status={s.status} />,
+    },
+    {
+      key: 'verification',
+      header: 'Verificación',
+      className: 'w-40',
+      render: (s) => <ConventionBadge state={conventionOf(s)} />,
     },
   ];
 
@@ -268,7 +270,10 @@ export function SyllabusListPage() {
 
         {/* Lista */}
         <Card className="border-0 shadow-sm">
-          <CardContent className="pt-5">
+          <CardContent className="pt-5 space-y-4">
+            <ConventionsLegend
+              states={['VERIFICADO', 'PENDIENTE_REGISTRO', 'PENDIENTE_FIRMA', 'BORRADOR']}
+            />
             <DataTable
               columns={columns}
               data={syllabus}

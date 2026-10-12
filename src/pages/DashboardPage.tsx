@@ -17,7 +17,7 @@ import {
   useUsers,
   useSubjects,
 } from '../hooks';
-import { getRoleLabel, getDescriptiveTitle, getDepartmentName, getProgramName } from '../lib/utils';
+import { getRoleLabel, getDescriptiveTitle, getOfferedBy } from '../lib/utils';
 import { syllabusAccess } from '../lib/syllabusAccess';
 import {
   FileText,
@@ -136,9 +136,7 @@ export function DashboardPage() {
         <div className="min-w-0">
           <p className="font-semibold text-gray-900 truncate">{s.title}</p>
           <p className="text-sm text-gray-500 mt-0.5 truncate">{getDescriptiveTitle(s)}</p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {s.subject.department ? getDepartmentName(s) : 'Posgrado'} / {getProgramName(s)}
-          </p>
+          <p className="text-xs text-gray-400 mt-0.5">{getOfferedBy(s)}</p>
         </div>
       ),
     },

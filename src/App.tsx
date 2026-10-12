@@ -12,6 +12,9 @@ import { AuditPage } from './pages/audit/AuditPage';
 import { PregradoPage } from './pages/catalog/PregradoPage';
 import { PosgradoPage } from './pages/catalog/PosgradoPage';
 import { SubjectsPage } from './pages/catalog/SubjectsPage';
+import { FacultiesPage } from './pages/catalog/FacultiesPage';
+import { StudyPlansPage } from './pages/catalog/StudyPlansPage';
+import { CertificatePage } from './pages/CertificatePage';
 import { SyllabusListPage } from './pages/syllabus/SyllabusListPage';
 import { SyllabusDetailPage } from './pages/syllabus/SyllabusDetailPage';
 import { SyllabusFormPage } from './pages/syllabus/SyllabusFormPage';
@@ -187,6 +190,22 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {[
+        { path: '/faculties', permission: 'faculty:create', page: <FacultiesPage /> },
+        { path: '/study-plans', permission: 'program:read', page: <StudyPlansPage /> },
+        { path: '/firma-digital', permission: 'syllabus:sign', page: <CertificatePage /> },
+      ].map(({ path, permission, page }) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            <ProtectedRoute>
+              <PermissionGuard permission={permission}>{page}</PermissionGuard>
+            </ProtectedRoute>
+          }
+        />
+      ))}
 
       <Route path="/departments" element={<Navigate to="/pregrado" replace />} />
       <Route path="/programs" element={<Navigate to="/posgrado" replace />} />

@@ -34,9 +34,8 @@ interface SubjectForm {
   name: string;
   code: string;
   credits: string;
-  semester: string;
-  programId: string;
-  departmentId: string;
+  /** Quién ofrece la asignatura: «d:<id>» (departamento) o «p:<id>» (programa de posgrado). */
+  owner: string;
   modality: string;
   hoursPresencial: string;
   hoursDirigido: string;
@@ -48,9 +47,7 @@ const emptyForm: SubjectForm = {
   name: '',
   code: '',
   credits: '3',
-  semester: '1',
-  programId: '',
-  departmentId: '',
+  owner: '',
   modality: 'Presencial',
   hoursPresencial: '',
   hoursDirigido: '',
@@ -62,9 +59,7 @@ const toForm = (s: Subject): SubjectForm => ({
   name: s.name,
   code: s.code,
   credits: String(s.credits),
-  semester: String(s.semester),
-  programId: s.program.id,
-  departmentId: s.department?.id ?? '',
+  owner: s.department ? `d:${s.department.id}` : `p:${s.program?.id ?? ''}`,
   modality: s.modality || 'Presencial',
   hoursPresencial: s.hoursPresencial?.toString() ?? '',
   hoursDirigido: s.hoursDirigido?.toString() ?? '',
@@ -74,13 +69,12 @@ const toForm = (s: Subject): SubjectForm => ({
 
 const optionalNumber = (value: string) => (value === '' ? null : Number(value));
 
-const toInput = (f: SubjectForm, posgrado: boolean): SubjectInput => ({
+const toInput = (f: SubjectForm): SubjectInput => ({
   name: f.name,
   code: f.code,
   credits: Number(f.credits),
-  semester: Number(f.semester),
-  programId: f.programId,
-  departmentId: posgrado ? null : f.departmentId,
+  departmentId: f.owner.startsWith('d:') ? f.owner.slice(2) : null,
+  programId: f.owner.startsWith('p:') ? f.owner.slice(2) : null,
   modality: f.modality,
   hoursPresencial: optionalNumber(f.hoursPresencial),
   hoursDirigido: optionalNumber(f.hoursDirigido),
@@ -88,9 +82,17 @@ const toInput = (f: SubjectForm, posgrado: boolean): SubjectInput => ({
   prerequisites: f.prerequisites,
 });
 
+/** Programas (y semestre) en cuyos planes de estudio vigentes está la asignatura. */
+const inPlans = (s: Subject) => {
+  const vigentes = s.programs.filter((p) => p.planActive);
+  return [...new Map(vigentes.map((p) => [p.id, p])).values()];
+};
+
 /**
  * UC7 asignaturas (Coord. de Departamento, en sus departamentos; el posgrado solo lo gestiona
- * Administración) y UC8 asignar profesor (Coord. de Programa). En /my-subjects es de solo consulta.
+ * Administración) y UC8 asignar profesor (Coord. de Programa). Cada asignatura la ofrece un
+ * departamento (o un programa de posgrado) y se cursa en los programas cuyos planes la incluyen.
+ * En /my-subjects es de solo consulta.
  */
 export function SubjectsPage() {
   const { user, can } = useAuth();
@@ -134,12 +136,10 @@ export function SubjectsPage() {
         : departments.filter((d) => user?.departments.some((ud) => ud.id === d.id)),
     [departments, fullScope, user],
   );
-  const editablePrograms = useMemo(
-    () => programs.filter((p) => fullScope || !isPosgradoLevel(p.level)),
+  const posgradoPrograms = useMemo(
+    () => (fullScope ? programs.filter((p) => isPosgradoLevel(p.level)) : []),
     [programs, fullScope],
   );
-  const selectedProgram = programs.find((p) => p.id === formData.programId);
-  const isPosgrado = isPosgradoLevel(selectedProgram?.level);
 
   const resetPage = () => setPage(1);
 
@@ -147,7 +147,7 @@ export function SubjectsPage() {
     setEditingSubject(null);
     setFormData({
       ...emptyForm,
-      departmentId: editableDepartments.length === 1 ? editableDepartments[0].id : '',
+      owner: editableDepartments.length === 1 ? `d:${editableDepartments[0].id}` : '',
     });
     setShowModal(true);
   };
@@ -163,27 +163,12 @@ export function SubjectsPage() {
     setAssignProfessorId(subject.professor?.id ?? '');
   };
 
-  const handleProgramChange = (programId: string) => {
-    const program = programs.find((p) => p.id === programId);
-    setFormData((prev) => ({
-      ...prev,
-      programId,
-      // Por defecto el departamento del programa, si el usuario puede gestionarlo.
-      departmentId:
-        program &&
-        !isPosgradoLevel(program.level) &&
-        editableDepartments.some((d) => d.id === program.department?.id)
-          ? (program.department?.id ?? '')
-          : prev.departmentId,
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await saveSubject.mutateAsync({
         id: editingSubject?.id,
-        input: toInput(formData, isPosgrado),
+        input: toInput(formData),
       });
       toast.success(
         editingSubject ? 'Asignatura actualizada correctamente' : 'Asignatura creada correctamente',
@@ -225,7 +210,7 @@ export function SubjectsPage() {
       await saveSubject.mutateAsync({
         id: subject.id,
         input: {
-          ...toInput(toForm(subject), isPosgradoLevel(subject.program.level)),
+          ...toInput(toForm(subject)),
           isActive: true,
         },
       });
@@ -243,25 +228,41 @@ export function SubjectsPage() {
     },
     { key: 'name', header: 'Nombre', render: (s) => <span className="font-medium">{s.name}</span> },
     {
-      key: 'program',
-      header: 'Programa',
+      key: 'offeredBy',
+      header: 'Ofrecida por',
       render: (s) => (
         <div className="text-gray-500">
-          <span className="block">{s.program.name}</span>
-          {isPosgradoLevel(s.program.level) && (
+          <span className="block">{s.department?.name ?? s.program?.name}</span>
+          {s.program && (
             <span className="text-xs text-gray-400">{getLevelLabel(s.program.level)}</span>
           )}
         </div>
       ),
     },
     {
+      key: 'programs',
+      header: 'Programas (semestre)',
+      render: (s) =>
+        inPlans(s).length === 0 ? (
+          <span className="text-xs text-gray-400">Sin plan de estudios</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {inPlans(s).map((p) => (
+              <span
+                key={p.id}
+                title={`${p.name} · ${p.plan}`}
+                className="rounded bg-uam-blue/10 px-1.5 py-0.5 text-xs text-uam-blue"
+              >
+                {p.code} · {p.semester}
+              </span>
+            ))}
+          </div>
+        ),
+    },
+    {
       key: 'credits',
-      header: 'Cred/Sem',
-      render: (s) => (
-        <span className="text-gray-500">
-          {s.credits}/{s.semester}
-        </span>
-      ),
+      header: 'Créditos',
+      render: (s) => <span className="text-gray-500">{s.credits}</span>,
     },
     {
       key: 'professor',
@@ -361,7 +362,7 @@ export function SubjectsPage() {
               }}
               className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">Todos los departamentos</option>
+              <option value="">Ofrecida por cualquier departamento</option>
               {departments.map((dept) => (
                 <option key={dept.id} value={dept.id}>
                   {dept.name}
@@ -376,7 +377,7 @@ export function SubjectsPage() {
               }}
               className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">Todos los programas</option>
+              <option value="">En la malla de cualquier programa</option>
               {programs.map((prog) => (
                 <option key={prog.id} value={prog.id}>
                   {prog.name}
@@ -444,49 +445,39 @@ export function SubjectsPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject-program">Programa</Label>
+            <Label htmlFor="subject-owner">Ofrecida por</Label>
             <select
-              id="subject-program"
-              value={formData.programId}
-              onChange={(e) => handleProgramChange(e.target.value)}
+              id="subject-owner"
+              value={formData.owner}
+              onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
               className={selectClass}
               required
             >
               <option value="">Seleccione...</option>
-              {editablePrograms.map((prog) => (
-                <option key={prog.id} value={prog.id}>
-                  {prog.name}
-                  {isPosgradoLevel(prog.level) ? ` (${getLevelLabel(prog.level)})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {isPosgrado ? (
-            <p className="text-xs text-gray-500">
-              Las asignaturas de posgrado no pertenecen a departamentos.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="subject-dept">Departamento</Label>
-              <select
-                id="subject-dept"
-                value={formData.departmentId}
-                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                className={selectClass}
-                required
-              >
-                <option value="">Seleccione...</option>
+              <optgroup label="Departamentos">
                 {editableDepartments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
+                  <option key={dept.id} value={`d:${dept.id}`}>
                     {dept.name}
                   </option>
                 ))}
-              </select>
-            </div>
-          )}
+              </optgroup>
+              {posgradoPrograms.length > 0 && (
+                <optgroup label="Programas de posgrado">
+                  {posgradoPrograms.map((prog) => (
+                    <option key={prog.id} value={`p:${prog.id}`}>
+                      {prog.name} ({getLevelLabel(prog.level)})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            <p className="text-xs text-gray-500">
+              Quien ofrece la asignatura la gestiona y firma su syllabus. Para que se curse en un
+              programa, agréguela a su plan de estudios en Planes de estudio.
+            </p>
+          </div>
 
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+          <div className="grid gap-4 grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="subject-credits">Créditos</Label>
               <Input
@@ -500,18 +491,6 @@ export function SubjectsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="subject-semester">Semestre</Label>
-              <Input
-                id="subject-semester"
-                type="number"
-                min={1}
-                max={12}
-                value={formData.semester}
-                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2 col-span-2 sm:col-span-1">
               <Label htmlFor="subject-modality">Modalidad</Label>
               <select
                 id="subject-modality"
@@ -624,16 +603,20 @@ interface AssignProfessorSelectProps {
   onChange: (value: string) => void;
 }
 
-/** Solo profesores activos afiliados al programa o al departamento de la asignatura (UC9). */
+/** Solo profesores activos afiliados a un programa que la cursa o al departamento que la ofrece (UC9). */
 function AssignProfessorSelect({ subject, value, onChange }: AssignProfessorSelectProps) {
   const { data: usersData, isLoading } = useUsers({
     role: Role.PROFESOR,
     isActive: true,
     limit: 100,
   });
+  const programIds = new Set([
+    ...subject.programs.map((p) => p.id),
+    ...(subject.program ? [subject.program.id] : []),
+  ]);
   const professors = (usersData?.data ?? []).filter(
     (p) =>
-      p.programs.some((prog) => prog.id === subject.program.id) ||
+      p.programs.some((prog) => programIds.has(prog.id)) ||
       (!!subject.department && p.departments.some((d) => d.id === subject.department?.id)),
   );
 

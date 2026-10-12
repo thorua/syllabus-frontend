@@ -193,6 +193,23 @@ function SettingsForm({ initial }: { initial: InstitutionalConfig }) {
                   'Acreditación Institucional de Alta Calidad',
                 )}
                 {field('footerText', 'Texto del Pie de Página')}
+                <div className="space-y-2">
+                  <Label htmlFor="cfg-maxSectionLength">Máximo de caracteres por sección *</Label>
+                  <Input
+                    id="cfg-maxSectionLength"
+                    type="number"
+                    min={200}
+                    max={20000}
+                    value={config.maxSectionLength ?? 2000}
+                    onChange={(e) =>
+                      setConfig({ ...config, maxSectionLength: Number(e.target.value) })
+                    }
+                    required
+                  />
+                  <p className="text-xs text-gray-500">
+                    Límite de cada sección del syllabus (2000 por defecto). Se aplica al guardar.
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
