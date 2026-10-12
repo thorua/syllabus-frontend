@@ -29,7 +29,5 @@ export interface InstitutionalConfig {
   documentDate: string;
   syllabusSubtitle: string;
   footerText: string;
-  /** Máximo de caracteres por sección del syllabus. */
-  maxSectionLength: number;
   evaluationTemplate: EvaluationTemplate;
 }
