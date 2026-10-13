@@ -120,7 +120,7 @@ export function SyllabusDetailPage() {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
+          <div className="flex flex-wrap items-center gap-2 whitespace-nowrap sm:justify-end">
             <SyllabusStatusBadge status={syllabus.status} />
             {can('syllabus:export') && (
               <Button

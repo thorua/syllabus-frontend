@@ -118,7 +118,7 @@ export function PendingSignaturesPage() {
       </PageContainer>
       {firmando && (
         <BatchSignModal
-          items={elegidos}
+          seleccion={elegidos}
           onClose={() => setFirmando(false)}
           onDone={() => setSeleccion(new Set())}
         />
@@ -128,15 +128,17 @@ export function PendingSignaturesPage() {
 }
 
 function BatchSignModal({
-  items,
+  seleccion,
   onClose,
   onDone,
 }: {
-  items: PendingSignature[];
+  seleccion: PendingSignature[];
   onClose: () => void;
   onDone: () => void;
 }) {
-  const { data: certificado } = useMyCertificate();
+  // Copia de la selección: al firmar, la bandeja se actualiza pero el resumen sigue mostrando sus nombres.
+  const [items] = useState(seleccion);
+  const { data: certificado, isLoading: consultando } = useMyCertificate();
   const [archivo, setArchivo] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [resultados, setResultados] = useState<BatchSignResult[] | null>(null);
@@ -184,7 +186,9 @@ function BatchSignModal({
             Se firma la versión que aparece en la bandeja de cada syllabus. Revíselos antes de
             firmar: la firma queda en el PDF de cada uno.
           </p>
-          {certificado ? (
+          {consultando ? (
+            <p className="text-sm text-gray-500">Consultando su certificado registrado...</p>
+          ) : certificado ? (
             <p className="rounded-lg bg-uam-gray-light/50 p-3 text-sm">
               Se usará su certificado registrado:{' '}
               <span className="font-medium">
@@ -218,7 +222,7 @@ function BatchSignModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={firmar.isPending}>
+            <Button type="submit" disabled={firmar.isPending || consultando}>
               <PenLine className="mr-2 h-4 w-4" />
               {firmar.isPending ? 'Firmando...' : 'Firmar'}
             </Button>
