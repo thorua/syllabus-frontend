@@ -29,7 +29,9 @@ export function CertificatePage() {
   const { data: certificate, isLoading } = useMyCertificate();
   const save = useSaveCertificate();
   const remove = useDeleteCertificate();
+  const saveAppearance = useSaveSignatureImage();
   const [file, setFile] = useState<File | null>(null);
+  const [appearance, setAppearance] = useState<File | null>(null);
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +39,8 @@ export function CertificatePage() {
     if (!file) return;
     try {
       await save.mutateAsync({ file, password });
-      toast.success('Certificado registrado');
+      if (appearance) await saveAppearance.mutateAsync(appearance);
+      toast.success(appearance ? 'Certificado y firma registrados' : 'Certificado registrado');
       setPassword('');
     } catch (error) {
       toast.error(getErrorMessage(error, 'No se pudo registrar el certificado'));
@@ -130,7 +133,25 @@ export function CertificatePage() {
                     protegido por ella y se le pedirá en cada firma.
                   </p>
                 </div>
-                <Button type="submit" disabled={save.isPending || !file}>
+                <div className="space-y-2">
+                  <Label htmlFor="cert-appearance">
+                    Apariencia de su firma en Acrobat (opcional)
+                  </Label>
+                  <Input
+                    id="cert-appearance"
+                    type="file"
+                    accept=".acrodata,image/png,image/jpeg"
+                    onChange={(e) => setAppearance(e.target.files?.[0] ?? null)}
+                  />
+                  <p className="text-xs text-gray-500">
+                    El archivo <code>appearances.acrodata</code> de la misma carpeta que su .pfx:
+                    trae el dibujo de su firma tal como lo pone Acrobat en el sello.
+                  </p>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={save.isPending || saveAppearance.isPending || !file}
+                >
                   <KeyRound className="mr-2 h-4 w-4" />
                   {save.isPending ? 'Comprobando...' : 'Registrar'}
                 </Button>
@@ -165,9 +186,10 @@ export function CertificatePage() {
               <div>
                 <p className="font-medium">Si creó su firma dentro de Acrobat</p>
                 <p className="text-gray-600">
-                  Registre directamente el archivo .pfx de su ID digital con la misma contraseña que
-                  usa en Acrobat. Está en <code>%APPDATA%\Adobe\Acrobat\DC\Security</code> (pegue
-                  esa ruta en la barra del Explorador de archivos).
+                  Pegue <code>%APPDATA%\Adobe\Acrobat\DC\Security</code> en la barra del Explorador
+                  de archivos. Allí están los dos archivos: el certificado (.pfx, con la misma
+                  contraseña que usa en Acrobat) y <code>appearances.acrodata</code>, con el dibujo
+                  de su firma. Regístrelos juntos.
                 </p>
               </div>
               <div>
@@ -266,8 +288,8 @@ function SignatureImageCard() {
           </div>
         ) : (
           <p className="text-sm text-gray-500">
-            No tiene una imagen registrada: el sello de sus firmas muestra su nombre, como en
-            Acrobat.
+            No tiene una firma registrada: el sello muestra su nombre en grande, como Acrobat cuando
+            no tiene una apariencia de firma.
           </p>
         )}
 
@@ -285,13 +307,13 @@ function SignatureImageCard() {
             <div className="space-y-2">
               <Input
                 type="file"
-                accept="image/png,image/jpeg"
+                accept=".acrodata,image/png,image/jpeg"
                 aria-label="Imagen de la firma"
                 onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
               />
               <p className="text-xs text-gray-500">
-                Firme en una hoja blanca con tinta oscura y tómele una foto o escanéela (PNG o JPG,
-                hasta 2 MB). El fondo blanco se quita solo.
+                El archivo <code>appearances.acrodata</code> de Acrobat, o una foto o escaneo de su
+                firma en una hoja blanca (PNG o JPG, hasta 2 MB). El fondo se quita solo.
               </p>
               <Button
                 type="button"
