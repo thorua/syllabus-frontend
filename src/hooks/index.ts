@@ -17,6 +17,9 @@ export {
   useMyCertificate,
   useSaveCertificate,
   useDeleteCertificate,
+  useMySignatureImage,
+  useSaveSignatureImage,
+  useDeleteSignatureImage,
 } from './useSignatures';
 export { useSettings, useUpdateSettings, useUploadLogo } from './useSettings';
 export {

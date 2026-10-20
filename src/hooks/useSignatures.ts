@@ -5,6 +5,7 @@ import { syllabusKeys } from './useSyllabus';
 import type { SignInput } from '../api/endpoints';
 
 const certificateKey = ['my-certificate'] as const;
+const signatureImageKey = ['my-signature-image'] as const;
 const signaturesKey = (id: string) => [...syllabusKeys.detail(id), 'signatures'] as const;
 
 const pendingKey = ['signatures', 'pending'] as const;
@@ -83,3 +84,22 @@ export const useSaveCertificate = () =>
 
 export const useDeleteCertificate = () =>
   useCertificateMutation(() => signaturesApi.deleteCertificate());
+
+/** Imagen de la firma manuscrita del usuario (PNG), o null si no la ha registrado. */
+export function useMySignatureImage() {
+  return useQuery({ queryKey: signatureImageKey, queryFn: signaturesApi.mySignatureImage });
+}
+
+function useSignatureImageMutation<V>(mutationFn: (variables: V) => Promise<unknown>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: signatureImageKey }),
+  });
+}
+
+export const useSaveSignatureImage = () =>
+  useSignatureImageMutation((image: Blob) => signaturesApi.saveSignatureImage(image));
+
+export const useDeleteSignatureImage = () =>
+  useSignatureImageMutation(() => signaturesApi.deleteSignatureImage());

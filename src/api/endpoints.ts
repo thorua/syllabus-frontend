@@ -138,6 +138,17 @@ export const signaturesApi = {
     return data(api.put<SignatureCertificate>('/auth/me/certificate', form, multipart));
   },
   deleteCertificate: () => data(api.delete<{ message: string }>('/auth/me/certificate')),
+  /** Imagen de la firma manuscrita (PNG) que se dibuja en el sello; null si no tiene. */
+  mySignatureImage: () =>
+    api
+      .get<Blob>('/auth/me/signature-image', { responseType: 'blob' })
+      .then((r) => (r.status === 204 || !r.data.size ? null : r.data)),
+  saveSignatureImage: (image: Blob) => {
+    const form = new FormData();
+    form.append('image', image, image instanceof File ? image.name : 'firma.png');
+    return data(api.put<{ message: string }>('/auth/me/signature-image', form, multipart));
+  },
+  deleteSignatureImage: () => data(api.delete<{ message: string }>('/auth/me/signature-image')),
 };
 
 export const exportApi = {
